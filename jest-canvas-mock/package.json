@@ -1,0 +1,101 @@
+{
+  "_args": [
+    [
+      "jest-canvas-mock@2.2.0",
+      "/home/pro/Solutions/drawboard-light"
+    ]
+  ],
+  "_development": true,
+  "_from": "jest-canvas-mock@2.2.0",
+  "_id": "jest-canvas-mock@2.2.0",
+  "_inBundle": false,
+  "_integrity": "sha512-DcJdchb7eWFZkt6pvyceWWnu3lsp5QWbUeXiKgEMhwB3sMm5qHM1GQhDajvJgBeiYpgKcojbzZ53d/nz6tXvJw==",
+  "_location": "/jest-canvas-mock",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "jest-canvas-mock@2.2.0",
+    "name": "jest-canvas-mock",
+    "escapedName": "jest-canvas-mock",
+    "rawSpec": "2.2.0",
+    "saveSpec": null,
+    "fetchSpec": "2.2.0"
+  },
+  "_requiredBy": [
+    "#DEV:/"
+  ],
+  "_resolved": "https://registry.npmjs.org/jest-canvas-mock/-/jest-canvas-mock-2.2.0.tgz",
+  "_spec": "2.2.0",
+  "_where": "/home/pro/Solutions/drawboard-light",
+  "author": {
+    "name": "hustcc"
+  },
+  "bugs": {
+    "url": "https://github.com/hustcc/jest-canvas-mock/issues"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-angular"
+    ]
+  },
+  "dependencies": {
+    "cssfontparser": "^1.2.1",
+    "parse-color": "^1.0.0"
+  },
+  "description": "Mock a canvas in your jest tests.",
+  "devDependencies": {
+    "@babel/cli": "^7.6.4",
+    "@babel/core": "^7.6.4",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/preset-env": "^7.6.3",
+    "@commitlint/cli": "^8.2.0",
+    "@commitlint/config-angular": "^8.2.0",
+    "babel-jest": "^24.9.0",
+    "babel-plugin-version": "^0.2.3",
+    "coveralls": "^3.0.7",
+    "husky": "^3.0.9",
+    "jest": "^24.9.0"
+  },
+  "homepage": "https://github.com/hustcc/jest-canvas-mock#readme",
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "pre-commit": "npm run test && npm run build"
+    }
+  },
+  "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/classes/**/*.js",
+      "src/mock/**/*.js"
+    ],
+    "setupFiles": [
+      "./src/index.js"
+    ]
+  },
+  "keywords": [
+    "mock",
+    "jest",
+    "jest-mock",
+    "echarts",
+    "canvas",
+    "test",
+    "unit"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "name": "jest-canvas-mock",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hustcc/jest-canvas-mock.git"
+  },
+  "scripts": {
+    "build": "babel src --out-dir lib",
+    "coveralls": "cat ./coverage/lcov.info | coveralls",
+    "prepare": "npm run build",
+    "test": "jest --no-cache"
+  },
+  "types": "types/index.d.ts",
+  "version": "2.2.0"
+}

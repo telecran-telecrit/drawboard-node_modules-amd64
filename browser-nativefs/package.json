@@ -1,0 +1,81 @@
+{
+  "_args": [
+    [
+      "browser-nativefs@0.6.0",
+      "/home/pro/Solutions/drawboard-light"
+    ]
+  ],
+  "_from": "browser-nativefs@0.6.0",
+  "_id": "browser-nativefs@0.6.0",
+  "_inBundle": false,
+  "_integrity": "sha512-jmwthJpySPRm+t9zDvUbDWQGlLZSt9XFyzHGCkfpIgA0f75bOqYvxLlSvFu83P03eiJ6RH/hEv1T57XlQsW+ZQ==",
+  "_location": "/browser-nativefs",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "browser-nativefs@0.6.0",
+    "name": "browser-nativefs",
+    "escapedName": "browser-nativefs",
+    "rawSpec": "0.6.0",
+    "saveSpec": null,
+    "fetchSpec": "0.6.0"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/browser-nativefs/-/browser-nativefs-0.6.0.tgz",
+  "_spec": "0.6.0",
+  "_where": "/home/pro/Solutions/drawboard-light",
+  "author": {
+    "name": "Thomas Steiner",
+    "url": "https://blog.tomayac.com/"
+  },
+  "browser": "dist/index.js",
+  "bugs": {
+    "url": "https://github.com/GoogleChromeLabs/browser-nativefs/issues"
+  },
+  "description": "Native File System API with legacy fallback in the browser.",
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-google": "^0.14.0",
+    "http-server": "^0.12.1",
+    "shx": "^0.3.2",
+    "terser": "^4.6.11"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 2020,
+      "sourceType": "module"
+    },
+    "extends": [
+      "google"
+    ]
+  },
+  "files": [
+    "dist/"
+  ],
+  "homepage": "https://github.com/GoogleChromeLabs/browser-nativefs#readme",
+  "keywords": [
+    "native file system",
+    "native file system api",
+    "native fs",
+    "nativefs"
+  ],
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "name": "browser-nativefs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GoogleChromeLabs/browser-nativefs.git"
+  },
+  "scripts": {
+    "build": "npm run clean && shx mkdir ./dist && npx ./build.sh",
+    "clean": "shx rm -rf ./dist",
+    "lint": "npx eslint ./src/*.mjs --fix && npx eslint ./src/*.js --fix && npx eslint ./demo/*.mjs --fix",
+    "prepare": "npm run lint && npm run build",
+    "start": "npx http-server -o /demo/"
+  },
+  "version": "0.6.0"
+}

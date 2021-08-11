@@ -1,0 +1,70 @@
+{
+  "_args": [
+    [
+      "roughjs@4.1.4",
+      "/home/pro/Solutions/drawboard-light"
+    ]
+  ],
+  "_from": "roughjs@4.1.4",
+  "_id": "roughjs@4.1.4",
+  "_inBundle": false,
+  "_integrity": "sha512-Mrx8r/NhTa9K+WuL2YfB5p40OAN/iRXXxmKUf/rxwgRh9Jrgz+dS2DOqnh0uMwzICJ2Rp0xTIFMgdqf0BCsmug==",
+  "_location": "/roughjs",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "roughjs@4.1.4",
+    "name": "roughjs",
+    "escapedName": "roughjs",
+    "rawSpec": "4.1.4",
+    "saveSpec": null,
+    "fetchSpec": "4.1.4"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/roughjs/-/roughjs-4.1.4.tgz",
+  "_spec": "4.1.4",
+  "_where": "/home/pro/Solutions/drawboard-light",
+  "author": {
+    "name": "Preet Shihn",
+    "email": "preetshihn@gmail.com"
+  },
+  "browser": "bundled/rough.js",
+  "bugs": {
+    "url": "https://github.com/pshihn/rough/issues"
+  },
+  "description": "Create graphics using HTML Canvas or SVG with a hand-drawn, sketchy, appearance.",
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^2.1.0",
+    "rollup": "^1.29.0",
+    "rollup-plugin-terser": "^5.2.0",
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.4"
+  },
+  "homepage": "https://roughjs.com",
+  "keywords": [
+    "canvas",
+    "svg",
+    "graphics",
+    "sketchy",
+    "hand drawn",
+    "hand-drawn"
+  ],
+  "license": "MIT",
+  "main": "bundled/rough.cjs.js",
+  "module": "bin/rough.js",
+  "name": "roughjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pshihn/rough.git"
+  },
+  "scripts": {
+    "build": "rm -rf bin && tsc && rollup -c",
+    "lint": "tslint -p tsconfig.json",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "types": "bin/rough.d.ts",
+  "version": "4.1.4"
+}

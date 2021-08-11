@@ -1,0 +1,2 @@
+// @license © 2020 Google LLC. Licensed under the Apache License, Version 2.0.
+const t=async t=>new Promise(e=>{const a=document.createElement("canvas");a.width=t.naturalWidth,a.height=t.naturalHeight,a.getContext("2d").drawImage(t,0,0),a.toBlob(t=>{e(t)})});export{t as imageToBlob};

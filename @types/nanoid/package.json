@@ -1,0 +1,67 @@
+{
+  "_args": [
+    [
+      "@types/nanoid@2.1.0",
+      "/home/pro/Solutions/drawboard-light"
+    ]
+  ],
+  "_development": true,
+  "_from": "@types/nanoid@2.1.0",
+  "_id": "@types/nanoid@2.1.0",
+  "_inBundle": false,
+  "_integrity": "sha512-xdkn/oRTA0GSNPLIKZgHWqDTWZsVrieKomxJBOQUK9YDD+zfSgmwD5t4WJYra5S7XyhTw7tfvwznW+pFexaepQ==",
+  "_location": "/@types/nanoid",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "@types/nanoid@2.1.0",
+    "name": "@types/nanoid",
+    "escapedName": "@types%2fnanoid",
+    "scope": "@types",
+    "rawSpec": "2.1.0",
+    "saveSpec": null,
+    "fetchSpec": "2.1.0"
+  },
+  "_requiredBy": [
+    "#DEV:/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@types/nanoid/-/nanoid-2.1.0.tgz",
+  "_spec": "2.1.0",
+  "_where": "/home/pro/Solutions/drawboard-light",
+  "bugs": {
+    "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/issues"
+  },
+  "contributors": [
+    {
+      "name": "Ruben Schmidmeister",
+      "url": "https://github.com/bash"
+    },
+    {
+      "name": "Daniel Zhang",
+      "url": "https://github.com/fadezhanger"
+    },
+    {
+      "name": "Sascha Zarhuber",
+      "url": "https://github.com/saschazar21"
+    }
+  ],
+  "dependencies": {
+    "@types/node": "*"
+  },
+  "description": "TypeScript definitions for nanoid",
+  "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped#readme",
+  "license": "MIT",
+  "main": "",
+  "name": "@types/nanoid",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+    "directory": "types/nanoid"
+  },
+  "scripts": {},
+  "typeScriptVersion": "2.0",
+  "types": "index",
+  "typesPublisherContentHash": "2fcf191c2285b6c52e26480b8487895e657fc61c46e6d3b787dffc539995e574",
+  "version": "2.1.0"
+}

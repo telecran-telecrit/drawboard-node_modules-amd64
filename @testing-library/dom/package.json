@@ -1,0 +1,116 @@
+{
+  "_args": [
+    [
+      "@testing-library/dom@7.2.0",
+      "/home/pro/Solutions/drawboard-light"
+    ]
+  ],
+  "_development": true,
+  "_from": "@testing-library/dom@7.2.0",
+  "_id": "@testing-library/dom@7.2.0",
+  "_inBundle": false,
+  "_integrity": "sha512-K1Sao38VxsTrjTkFkzeW8m/oCtgCI5lANCE7u9ZaF+TTL3uKuiZ+vazeurxjvRHAsE6PvXjOIl6JFuZfgcWJSQ==",
+  "_location": "/@testing-library/dom",
+  "_phantomChildren": {
+    "@babel/runtime-corejs3": "7.8.7",
+    "@types/color-name": "1.1.1",
+    "@types/istanbul-lib-coverage": "2.0.1",
+    "@types/istanbul-reports": "1.1.1",
+    "@types/yargs-parser": "15.0.0",
+    "ansi-regex": "5.0.0",
+    "react-is": "16.12.0"
+  },
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "@testing-library/dom@7.2.0",
+    "name": "@testing-library/dom",
+    "escapedName": "@testing-library%2fdom",
+    "scope": "@testing-library",
+    "rawSpec": "7.2.0",
+    "saveSpec": null,
+    "fetchSpec": "7.2.0"
+  },
+  "_requiredBy": [
+    "/@testing-library/react"
+  ],
+  "_resolved": "https://registry.npmjs.org/@testing-library/dom/-/dom-7.2.0.tgz",
+  "_spec": "7.2.0",
+  "_where": "/home/pro/Solutions/drawboard-light",
+  "author": {
+    "name": "Kent C. Dodds",
+    "email": "me@kentcdodds.com",
+    "url": "https://kentcdodds.com"
+  },
+  "bugs": {
+    "url": "https://github.com/testing-library/dom-testing-library/issues"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.9.2",
+    "@types/testing-library__dom": "^7.0.0",
+    "aria-query": "^4.0.2",
+    "dom-accessibility-api": "^0.4.2",
+    "pretty-format": "^25.1.0"
+  },
+  "description": "Simple and complete DOM testing utilities that encourage good testing practices.",
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.1.1",
+    "jest-in-case": "^1.0.2",
+    "jest-serializer-ansi": "^1.0.3",
+    "jest-watch-select-projects": "^2.0.0",
+    "jsdom": "^16.2.1",
+    "kcd-scripts": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=10"
+  },
+  "eslintConfig": {
+    "extends": "./node_modules/kcd-scripts/eslint.js",
+    "rules": {
+      "import/prefer-default-export": "off",
+      "import/no-unassigned-import": "off",
+      "import/no-useless-path-segments": "off",
+      "no-console": "off"
+    }
+  },
+  "eslintIgnore": [
+    "node_modules",
+    "coverage",
+    "dist"
+  ],
+  "files": [
+    "dist"
+  ],
+  "homepage": "https://github.com/testing-library/dom-testing-library#readme",
+  "keywords": [
+    "testing",
+    "ui",
+    "dom",
+    "jsdom",
+    "unit",
+    "integration",
+    "functional",
+    "end-to-end",
+    "e2e"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "module": "dist/@testing-library/dom.esm.js",
+  "name": "@testing-library/dom",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/testing-library/dom-testing-library.git"
+  },
+  "scripts": {
+    "build": "kcd-scripts build --ignore \"**/__tests__/**,**/__node_tests__/**,**/__mocks__/**\" && kcd-scripts build --bundle --no-clean",
+    "lint": "kcd-scripts lint",
+    "setup": "npm install && npm run validate -s",
+    "test": "kcd-scripts test",
+    "test:debug": "node --inspect-brk ./node_modules/.bin/jest --watch --runInBand",
+    "test:update": "npm test -- --updateSnapshot --coverage",
+    "validate": "kcd-scripts validate"
+  },
+  "source": "src/index.js",
+  "umd:main": "dist/@testing-library/dom.umd.js",
+  "version": "7.2.0"
+}
