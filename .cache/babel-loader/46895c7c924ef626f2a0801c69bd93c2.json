@@ -1,1 +1,0 @@
-{"ast":null,"code":"export { renderScene } from \"./renderScene\";","map":{"version":3,"sources":["/home/pro/Solutions/drawboard-light/src/renderer/index.ts"],"names":["renderScene"],"mappings":"AAAA,SAASA,WAAT,QAA4B,eAA5B","sourcesContent":["export { renderScene } from \"./renderScene\";\n"]},"metadata":{},"sourceType":"module"}

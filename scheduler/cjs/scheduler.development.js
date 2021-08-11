@@ -1,4 +1,4 @@
-/** @license React v0.19.1
+/** @license React v0.19.0
  * scheduler.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.

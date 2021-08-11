@@ -1,5 +1,7 @@
 "use strict";
 
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -9,6 +11,8 @@ exports.isSubtreeInaccessible = isSubtreeInaccessible;
 exports.prettyRoles = prettyRoles;
 exports.isInaccessible = isInaccessible;
 exports.logRoles = void 0;
+
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
 var _ariaQuery = require("aria-query");
 
@@ -152,11 +156,11 @@ function getRoles(container, {
     return hidden === false ? isInaccessible(element) === false : true;
   }).reduce((acc, node) => {
     const roles = getImplicitAriaRoles(node);
-    return roles.reduce((rolesAcc, role) => Array.isArray(rolesAcc[role]) ? { ...rolesAcc,
+    return roles.reduce((rolesAcc, role) => Array.isArray(rolesAcc[role]) ? (0, _extends2.default)({}, rolesAcc, {
       [role]: [...rolesAcc[role], node]
-    } : { ...rolesAcc,
+    }) : (0, _extends2.default)({}, rolesAcc, {
       [role]: [node]
-    }, acc);
+    }), acc);
   }, {});
 }
 
@@ -182,5 +186,7 @@ const logRoles = (dom, {
 } = {}) => console.log(prettyRoles(dom, {
   hidden
 }));
+/* eslint no-console:0 */
+
 
 exports.logRoles = logRoles;

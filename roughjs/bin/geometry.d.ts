@@ -9,4 +9,3 @@ export interface Rectangle {
 export declare function rotatePoints(points: Point[], center: Point, degrees: number): void;
 export declare function rotateLines(lines: Line[], center: Point, degrees: number): void;
 export declare function lineLength(line: Line): number;
-export declare function getPointsOnBezierCurves(points: Point[], tolerance: number): Point[];

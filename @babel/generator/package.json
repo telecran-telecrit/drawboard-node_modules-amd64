@@ -1,54 +1,54 @@
 {
   "_args": [
     [
-      "@babel/generator@7.9.0",
+      "@babel/generator@7.8.4",
       "/home/pro/Solutions/drawboard-light"
     ]
   ],
-  "_from": "@babel/generator@7.9.0",
-  "_id": "@babel/generator@7.9.0",
+  "_from": "@babel/generator@7.8.4",
+  "_id": "@babel/generator@7.8.4",
   "_inBundle": false,
-  "_integrity": "sha512-onl4Oy46oGCzymOXtKMQpI7VXtCbTSHK1kqBydZ6AmzuNcacEVqGk9tZtAS+48IA9IstZcDCgIg8hQKnb7suRw==",
+  "_integrity": "sha512-PwhclGdRpNAf3IxZb0YVuITPZmmrXz9zf6fH8lT4XbrmfQKr6ryBzhv593P5C6poJRciFCL/eHGW2NuGrgEyxA==",
   "_location": "/@babel/generator",
   "_phantomChildren": {},
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "@babel/generator@7.9.0",
+    "raw": "@babel/generator@7.8.4",
     "name": "@babel/generator",
     "escapedName": "@babel%2fgenerator",
     "scope": "@babel",
-    "rawSpec": "7.9.0",
+    "rawSpec": "7.8.4",
     "saveSpec": null,
-    "fetchSpec": "7.9.0"
+    "fetchSpec": "7.8.4"
   },
   "_requiredBy": [
     "/@babel/core",
     "/@babel/traverse",
     "/istanbul-lib-instrument"
   ],
-  "_resolved": "https://registry.npmjs.org/@babel/generator/-/generator-7.9.0.tgz",
-  "_spec": "7.9.0",
+  "_resolved": "https://registry.npmjs.org/@babel/generator/-/generator-7.8.4.tgz",
+  "_spec": "7.8.4",
   "_where": "/home/pro/Solutions/drawboard-light",
   "author": {
     "name": "Sebastian McKenzie",
     "email": "sebmck@gmail.com"
   },
   "dependencies": {
-    "@babel/types": "^7.9.0",
+    "@babel/types": "^7.8.3",
     "jsesc": "^2.5.1",
     "lodash": "^4.17.13",
     "source-map": "^0.5.0"
   },
   "description": "Turns an AST into code.",
   "devDependencies": {
-    "@babel/helper-fixtures": "^7.8.6",
-    "@babel/parser": "^7.9.0"
+    "@babel/helper-fixtures": "^7.8.3",
+    "@babel/parser": "^7.8.4"
   },
   "files": [
     "lib"
   ],
-  "gitHead": "8d5e422be27251cfaadf8dd2536b31b4a5024b02",
+  "gitHead": "5c2e6bc07fed3d28801d93168622c99ae622653a",
   "homepage": "https://babeljs.io/",
   "license": "MIT",
   "main": "lib/index.js",
@@ -60,5 +60,5 @@
     "type": "git",
     "url": "https://github.com/babel/babel/tree/master/packages/babel-generator"
   },
-  "version": "7.9.0"
+  "version": "7.8.4"
 }

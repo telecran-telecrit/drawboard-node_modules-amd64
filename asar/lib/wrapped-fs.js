@@ -1,10 +1,12 @@
 'use strict'
 
+const { promisify } = require('util')
+
 const fs = process.versions.electron ? require('original-fs') : require('fs')
+const mkdirp = require('mkdirp')
 
 const promisifiedMethods = [
   'lstat',
-  'mkdtemp',
   'readFile',
   'stat',
   'writeFile'
@@ -14,13 +16,13 @@ const promisified = {}
 
 for (const method of Object.keys(fs)) {
   if (promisifiedMethods.includes(method)) {
-    promisified[method] = fs.promises[method]
+    promisified[method] = promisify(fs[method])
   } else {
     promisified[method] = fs[method]
   }
 }
 // To make it more like fs-extra
-promisified.mkdirp = (dir) => fs.promises.mkdir(dir, { recursive: true })
-promisified.mkdirpSync = (dir) => fs.mkdirSync(dir, { recursive: true })
+promisified.mkdirp = promisify(mkdirp)
+promisified.mkdirpSync = mkdirp.sync
 
 module.exports = promisified

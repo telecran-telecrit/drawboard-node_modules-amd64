@@ -11,8 +11,6 @@ var _types2 = require("../tokenizer/types");
 
 var _expression = _interopRequireDefault(require("./expression"));
 
-var _location = require("./location");
-
 var _identifier = require("../util/identifier");
 
 var _whitespace = require("../util/whitespace");
@@ -20,8 +18,6 @@ var _whitespace = require("../util/whitespace");
 var _scopeflags = require("../util/scopeflags");
 
 var _util = require("./util");
-
-var _productionParameter = require("../util/production-parameter");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -50,7 +46,7 @@ class StatementParser extends _expression.default {
       for (let _i = 0, _Array$from = Array.from(this.scope.undefinedExports); _i < _Array$from.length; _i++) {
         const [name] = _Array$from[_i];
         const pos = this.scope.undefinedExports.get(name);
-        this.raise(pos, _location.Errors.ModuleExportUndefined, name);
+        this.raise(pos, `Export '${name}' is not defined`);
       }
     }
 
@@ -145,9 +141,9 @@ class StatementParser extends _expression.default {
 
         if (context) {
           if (this.state.strict) {
-            this.raise(this.state.start, _location.Errors.StrictFunction);
+            this.raise(this.state.start, "In strict mode code, functions can only be declared at top level or inside a block");
           } else if (context !== "if" && context !== "label") {
-            this.raise(this.state.start, _location.Errors.SloppyFunction);
+            this.raise(this.state.start, "In non-strict mode code, functions can only be declared at top level, " + "inside a block, or as the body of an if statement");
           }
         }
 
@@ -177,7 +173,7 @@ class StatementParser extends _expression.default {
         kind = kind || this.state.value;
 
         if (context && kind !== "var") {
-          this.raise(this.state.start, _location.Errors.UnexpectedLexicalDeclaration);
+          this.raise(this.state.start, "Lexical declaration cannot appear in a single-statement context");
         }
 
         return this.parseVarStatement(node, kind);
@@ -204,7 +200,7 @@ class StatementParser extends _expression.default {
           }
 
           if (!this.options.allowImportExportEverywhere && !topLevel) {
-            this.raise(this.state.start, _location.Errors.UnexpectedImportExport);
+            this.raise(this.state.start, "'import' and 'export' may only appear at the top level");
           }
 
           this.next();
@@ -232,7 +228,7 @@ class StatementParser extends _expression.default {
         {
           if (this.isAsyncFunction()) {
             if (context) {
-              this.raise(this.state.start, _location.Errors.AsyncFunctionInSingleStatementContext);
+              this.raise(this.state.start, "Async functions can only be declared at the top level or inside a block");
             }
 
             this.next();
@@ -253,9 +249,9 @@ class StatementParser extends _expression.default {
 
   assertModuleNodeAllowed(node) {
     if (!this.options.allowImportExportEverywhere && !this.inModule) {
-      this.raiseWithData(node.start, {
+      this.raise(node.start, `'import' and 'export' may appear only with 'sourceType: "module"'`, {
         code: "BABEL_PARSER_SOURCETYPE_MODULE_REQUIRED"
-      }, _location.Errors.ImportOutsideModule);
+      });
     }
   }
 
@@ -287,10 +283,10 @@ class StatementParser extends _expression.default {
       }
 
       if (this.hasPlugin("decorators") && !this.getPluginOption("decorators", "decoratorsBeforeExport")) {
-        this.raise(this.state.start, _location.Errors.DecoratorExportClass);
+        this.raise(this.state.start, "Using the export keyword between a decorator and a class is not allowed. " + "Please use `export @dec class` instead.");
       }
     } else if (!this.canHaveLeadingDecorator()) {
-      throw this.raise(this.state.start, _location.Errors.UnexpectedLeadingDecorator);
+      throw this.raise(this.state.start, "Leading decorators must be attached to a class declaration");
     }
   }
 
@@ -370,7 +366,7 @@ class StatementParser extends _expression.default {
     }
 
     if (i === this.state.labels.length) {
-      this.raise(node.start, _location.Errors.IllegalBreakContinue, keyword);
+      this.raise(node.start, "Unsyntactic " + keyword);
     }
   }
 
@@ -471,8 +467,8 @@ class StatementParser extends _expression.default {
   }
 
   parseReturnStatement(node) {
-    if (!this.prodParam.hasReturn && !this.options.allowReturnOutsideFunction) {
-      this.raise(this.state.start, _location.Errors.IllegalReturn);
+    if (!this.scope.inFunction && !this.options.allowReturnOutsideFunction) {
+      this.raise(this.state.start, "'return' outside of function");
     }
 
     this.next();
@@ -508,7 +504,7 @@ class StatementParser extends _expression.default {
           cur.test = this.parseExpression();
         } else {
           if (sawDefault) {
-            this.raise(this.state.lastTokStart, _location.Errors.MultipleDefaultsInSwitch);
+            this.raise(this.state.lastTokStart, "Multiple default clauses");
           }
 
           sawDefault = true;
@@ -536,7 +532,7 @@ class StatementParser extends _expression.default {
     this.next();
 
     if (_whitespace.lineBreak.test(this.input.slice(this.state.lastTokEnd, this.state.start))) {
-      this.raise(this.state.lastTokEnd, _location.Errors.NewlineAfterThrow);
+      this.raise(this.state.lastTokEnd, "Illegal newline after throw");
     }
 
     node.argument = this.parseExpression();
@@ -573,7 +569,7 @@ class StatementParser extends _expression.default {
     node.finalizer = this.eat(_types2.types._finally) ? this.parseBlock() : null;
 
     if (!node.handler && !node.finalizer) {
-      this.raise(node.start, _location.Errors.NoCatchOrFinally);
+      this.raise(node.start, "Missing catch or finally clause");
     }
 
     return this.finishNode(node, "TryStatement");
@@ -597,7 +593,7 @@ class StatementParser extends _expression.default {
 
   parseWithStatement(node) {
     if (this.state.strict) {
-      this.raise(this.state.start, _location.Errors.StrictWith);
+      this.raise(this.state.start, "'with' in strict mode");
     }
 
     this.next();
@@ -616,7 +612,7 @@ class StatementParser extends _expression.default {
       const label = _this$state$labels[_i2];
 
       if (label.name === maybeName) {
-        this.raise(expr.start, _location.Errors.LabelRedeclaration, maybeName);
+        this.raise(expr.start, `Label '${maybeName}' is already declared`);
       }
     }
 
@@ -650,7 +646,7 @@ class StatementParser extends _expression.default {
     return this.finishNode(node, "ExpressionStatement");
   }
 
-  parseBlock(allowDirectives = false, createNewLexicalScope = true, afterBlockParse) {
+  parseBlock(allowDirectives = false, createNewLexicalScope = true) {
     const node = this.startNode();
     this.expect(_types2.types.braceL);
 
@@ -658,7 +654,7 @@ class StatementParser extends _expression.default {
       this.scope.enter(_scopeflags.SCOPE_OTHER);
     }
 
-    this.parseBlockBody(node, allowDirectives, false, _types2.types.braceR, afterBlockParse);
+    this.parseBlockBody(node, allowDirectives, false, _types2.types.braceR);
 
     if (createNewLexicalScope) {
       this.scope.exit();
@@ -671,20 +667,20 @@ class StatementParser extends _expression.default {
     return stmt.type === "ExpressionStatement" && stmt.expression.type === "StringLiteral" && !stmt.expression.extra.parenthesized;
   }
 
-  parseBlockBody(node, allowDirectives, topLevel, end, afterBlockParse) {
+  parseBlockBody(node, allowDirectives, topLevel, end) {
     const body = node.body = [];
     const directives = node.directives = [];
-    this.parseBlockOrModuleBlockBody(body, allowDirectives ? directives : undefined, topLevel, end, afterBlockParse);
+    this.parseBlockOrModuleBlockBody(body, allowDirectives ? directives : undefined, topLevel, end);
   }
 
-  parseBlockOrModuleBlockBody(body, directives, topLevel, end, afterBlockParse) {
-    const octalPositions = [];
+  parseBlockOrModuleBlockBody(body, directives, topLevel, end) {
     let parsedNonDirective = false;
-    let oldStrict = null;
+    let oldStrict;
+    let octalPosition;
 
     while (!this.eat(end)) {
-      if (!parsedNonDirective && this.state.octalPositions.length) {
-        octalPositions.push(...this.state.octalPositions);
+      if (!parsedNonDirective && this.state.containsOctal && !octalPosition) {
+        octalPosition = this.state.octalPosition;
       }
 
       const stmt = this.parseStatement(null, topLevel);
@@ -693,9 +689,13 @@ class StatementParser extends _expression.default {
         const directive = this.stmtToDirective(stmt);
         directives.push(directive);
 
-        if (oldStrict === null && directive.value.value === "use strict") {
+        if (oldStrict === undefined && directive.value.value === "use strict") {
           oldStrict = this.state.strict;
           this.setStrict(true);
+
+          if (octalPosition) {
+            this.raise(octalPosition, "Octal literal in strict mode");
+          }
         }
 
         continue;
@@ -703,17 +703,6 @@ class StatementParser extends _expression.default {
 
       parsedNonDirective = true;
       body.push(stmt);
-    }
-
-    if (this.state.strict && octalPositions.length) {
-      for (let _i3 = 0; _i3 < octalPositions.length; _i3++) {
-        const pos = octalPositions[_i3];
-        this.raise(pos, _location.Errors.StrictOctalLiteral);
-      }
-    }
-
-    if (afterBlockParse) {
-      afterBlockParse.call(this, oldStrict !== null);
     }
 
     if (oldStrict === false) {
@@ -745,9 +734,9 @@ class StatementParser extends _expression.default {
     }
 
     if (init.type === "VariableDeclaration" && init.declarations[0].init != null && (!isForIn || this.state.strict || init.kind !== "var" || init.declarations[0].id.type !== "Identifier")) {
-      this.raise(init.start, _location.Errors.ForInOfLoopInitializer, isForIn ? "for-in" : "for-of");
+      this.raise(init.start, `${isForIn ? "for-in" : "for-of"} loop variable declaration may not have an initializer`);
     } else if (init.type === "AssignmentPattern") {
-      this.raise(init.start, _location.Errors.InvalidLhs, "for-loop");
+      this.raise(init.start, "Invalid left-hand side in for-loop");
     }
 
     node.left = init;
@@ -776,7 +765,7 @@ class StatementParser extends _expression.default {
             this.unexpected();
           }
         } else if (decl.id.type !== "Identifier" && !(isFor && (this.match(_types2.types._in) || this.isContextual("of")))) {
-          this.raise(this.state.lastTokEnd, _location.Errors.DeclarationMissingInitializer, "Complex binding patterns");
+          this.raise(this.state.lastTokEnd, "Complex binding patterns require an initialization value");
         }
 
         decl.init = null;
@@ -801,7 +790,7 @@ class StatementParser extends _expression.default {
     this.initFunction(node, isAsync);
 
     if (this.match(_types2.types.star) && isHangingStatement) {
-      this.raise(this.state.start, _location.Errors.GeneratorInSingleStatementContext);
+      this.raise(this.state.start, "Generators can only be declared at the top level or inside a block");
     }
 
     node.generator = this.eat(_types2.types.star);
@@ -816,8 +805,7 @@ class StatementParser extends _expression.default {
     this.state.maybeInArrowParameters = false;
     this.state.yieldPos = -1;
     this.state.awaitPos = -1;
-    this.scope.enter(_scopeflags.SCOPE_FUNCTION);
-    this.prodParam.enter((0, _productionParameter.functionFlags)(isAsync, node.generator));
+    this.scope.enter((0, _scopeflags.functionFlags)(node.async, node.generator));
 
     if (!isStatement) {
       node.id = this.parseFunctionId();
@@ -827,7 +815,6 @@ class StatementParser extends _expression.default {
     this.withTopicForbiddingContext(() => {
       this.parseFunctionBodyAndFinish(node, isStatement ? "FunctionDeclaration" : "FunctionExpression");
     });
-    this.prodParam.exit();
     this.scope.exit();
 
     if (isStatement && !isHangingStatement) {
@@ -895,7 +882,7 @@ class StatementParser extends _expression.default {
       while (!this.eat(_types2.types.braceR)) {
         if (this.eat(_types2.types.semi)) {
           if (decorators.length > 0) {
-            throw this.raise(this.state.lastTokEnd, _location.Errors.DecoratorSemicolon);
+            throw this.raise(this.state.lastTokEnd, "Decorators must not be followed by a semicolon");
           }
 
           continue;
@@ -917,50 +904,46 @@ class StatementParser extends _expression.default {
         this.parseClassMember(classBody, member, state, constructorAllowsSuper);
 
         if (member.kind === "constructor" && member.decorators && member.decorators.length > 0) {
-          this.raise(member.start, _location.Errors.DecoratorConstructor);
+          this.raise(member.start, "Decorators can't be used with a constructor. Did you mean '@dec class { ... }'?");
         }
       }
     });
 
     if (decorators.length) {
-      throw this.raise(this.state.start, _location.Errors.TrailingDecorator);
+      throw this.raise(this.state.start, "You have trailing decorators with no method");
     }
 
     this.classScope.exit();
     return this.finishNode(classBody, "ClassBody");
   }
 
-  parseClassMemberFromModifier(classBody, member) {
-    const containsEsc = this.state.containsEsc;
-    const key = this.parseIdentifier(true);
-
-    if (this.isClassMethod()) {
-      const method = member;
-      method.kind = "method";
-      method.computed = false;
-      method.key = key;
-      method.static = false;
-      this.pushClassMethod(classBody, method, false, false, false, false);
-      return true;
-    } else if (this.isClassProperty()) {
-      const prop = member;
-      prop.computed = false;
-      prop.key = key;
-      prop.static = false;
-      classBody.body.push(this.parseClassProperty(prop));
-      return true;
-    } else if (containsEsc) {
-      throw this.unexpected();
-    }
-
-    return false;
-  }
-
   parseClassMember(classBody, member, state, constructorAllowsSuper) {
-    const isStatic = this.isContextual("static");
+    let isStatic = false;
+    const containsEsc = this.state.containsEsc;
 
-    if (isStatic && this.parseClassMemberFromModifier(classBody, member)) {
-      return;
+    if (this.match(_types2.types.name) && this.state.value === "static") {
+      const key = this.parseIdentifier(true);
+
+      if (this.isClassMethod()) {
+        const method = member;
+        method.kind = "method";
+        method.computed = false;
+        method.key = key;
+        method.static = false;
+        this.pushClassMethod(classBody, method, false, false, false, false);
+        return;
+      } else if (this.isClassProperty()) {
+        const prop = member;
+        prop.computed = false;
+        prop.key = key;
+        prop.static = false;
+        classBody.body.push(this.parseClassProperty(prop));
+        return;
+      } else if (containsEsc) {
+        throw this.unexpected();
+      }
+
+      isStatic = true;
     }
 
     this.parseClassMemberWithIsStatic(classBody, member, state, isStatic, constructorAllowsSuper);
@@ -985,7 +968,7 @@ class StatementParser extends _expression.default {
       }
 
       if (this.isNonstaticConstructor(publicMethod)) {
-        this.raise(publicMethod.key.start, _location.Errors.ConstructorIsGenerator);
+        this.raise(publicMethod.key.start, "Constructor can't be a generator");
       }
 
       this.pushClassMethod(classBody, publicMethod, true, false, false, false);
@@ -1014,7 +997,7 @@ class StatementParser extends _expression.default {
         publicMethod.kind = "constructor";
 
         if (state.hadConstructor && !this.hasPlugin("typescript")) {
-          this.raise(key.start, _location.Errors.DuplicateConstructor);
+          this.raise(key.start, "Duplicate constructor in the same class");
         }
 
         state.hadConstructor = true;
@@ -1043,7 +1026,7 @@ class StatementParser extends _expression.default {
         this.pushClassPrivateMethod(classBody, privateMethod, isGenerator, true);
       } else {
         if (this.isNonstaticConstructor(publicMethod)) {
-          this.raise(publicMethod.key.start, _location.Errors.ConstructorIsAsync);
+          this.raise(publicMethod.key.start, "Constructor can't be an async function");
         }
 
         this.pushClassMethod(classBody, publicMethod, isGenerator, true, false, false);
@@ -1056,7 +1039,7 @@ class StatementParser extends _expression.default {
         this.pushClassPrivateMethod(classBody, privateMethod, false, false);
       } else {
         if (this.isNonstaticConstructor(publicMethod)) {
-          this.raise(publicMethod.key.start, _location.Errors.ConstructorIsAccessor);
+          this.raise(publicMethod.key.start, "Constructor can't have get/set modifier");
         }
 
         this.pushClassMethod(classBody, publicMethod, false, false, false, false);
@@ -1078,11 +1061,11 @@ class StatementParser extends _expression.default {
     const key = this.parsePropertyName(member, true);
 
     if (!member.computed && member.static && (key.name === "prototype" || key.value === "prototype")) {
-      this.raise(key.start, _location.Errors.StaticPrototype);
+      this.raise(key.start, "Classes may not have static property named prototype");
     }
 
     if (key.type === "PrivateName" && key.id.name === "constructor") {
-      this.raise(key.start, _location.Errors.ConstructorClassPrivateField);
+      this.raise(key.start, "Classes may not have a private field named '#constructor'");
     }
 
     return key;
@@ -1090,7 +1073,7 @@ class StatementParser extends _expression.default {
 
   pushClassProperty(classBody, prop) {
     if (!prop.computed && (prop.key.name === "constructor" || prop.key.value === "constructor")) {
-      this.raise(prop.key.start, _location.Errors.ConstructorClassField);
+      this.raise(prop.key.start, "Classes may not have a field named 'constructor'");
     }
 
     classBody.body.push(this.parseClassProperty(prop));
@@ -1123,10 +1106,8 @@ class StatementParser extends _expression.default {
 
   parseClassPrivateProperty(node) {
     this.scope.enter(_scopeflags.SCOPE_CLASS | _scopeflags.SCOPE_SUPER);
-    this.prodParam.enter(_productionParameter.PARAM);
     node.value = this.eat(_types2.types.eq) ? this.parseMaybeAssign() : null;
     this.semicolon();
-    this.prodParam.exit();
     this.scope.exit();
     return this.finishNode(node, "ClassPrivateProperty");
   }
@@ -1137,7 +1118,6 @@ class StatementParser extends _expression.default {
     }
 
     this.scope.enter(_scopeflags.SCOPE_CLASS | _scopeflags.SCOPE_SUPER);
-    this.prodParam.enter(_productionParameter.PARAM);
 
     if (this.match(_types2.types.eq)) {
       this.expectPlugin("classProperties");
@@ -1148,7 +1128,6 @@ class StatementParser extends _expression.default {
     }
 
     this.semicolon();
-    this.prodParam.exit();
     this.scope.exit();
     return this.finishNode(node, "ClassProperty");
   }
@@ -1164,7 +1143,7 @@ class StatementParser extends _expression.default {
       if (optionalId || !isStatement) {
         node.id = null;
       } else {
-        this.unexpected(null, _location.Errors.MissingClassName);
+        this.unexpected(null, "A class name is required");
       }
     }
   }
@@ -1263,7 +1242,7 @@ class StatementParser extends _expression.default {
         const next = this.nextTokenStart();
 
         if (!this.isUnparsedContextual(next, "function")) {
-          this.unexpected(next, _types2.types._function);
+          this.unexpected(next, `Unexpected token, expected "function"`);
         }
       }
 
@@ -1298,13 +1277,13 @@ class StatementParser extends _expression.default {
       return this.parseClass(expr, true, true);
     } else if (this.match(_types2.types.at)) {
       if (this.hasPlugin("decorators") && this.getPluginOption("decorators", "decoratorsBeforeExport")) {
-        this.raise(this.state.start, _location.Errors.DecoratorBeforeExport);
+        this.raise(this.state.start, "Decorators must be placed *before* the 'export' keyword." + " You can set the 'decoratorsBeforeExport' option to false to use" + " the 'export @decorator class {}' syntax");
       }
 
       this.parseDecorators(false);
       return this.parseClass(expr, true, true);
     } else if (this.match(_types2.types._const) || this.match(_types2.types._var) || this.isLet()) {
-      throw this.raise(this.state.start, _location.Errors.UnsupportedDefaultExport);
+      throw this.raise(this.state.start, "Only expressions, functions or classes are allowed as the `default` export.");
     } else {
       const res = this.parseMaybeAssign();
       this.semicolon();
@@ -1350,7 +1329,7 @@ class StatementParser extends _expression.default {
 
       if (this.hasPlugin("decorators")) {
         if (this.getPluginOption("decorators", "decoratorsBeforeExport")) {
-          this.unexpected(this.state.start, _location.Errors.DecoratorBeforeExport);
+          this.unexpected(this.state.start, "Decorators must be placed *before* the 'export' keyword." + " You can set the 'decoratorsBeforeExport' option to false to use" + " the 'export @decorator class {}' syntax");
         } else {
           return true;
         }
@@ -1365,8 +1344,8 @@ class StatementParser extends _expression.default {
       if (isDefault) {
         this.checkDuplicateExports(node, "default");
       } else if (node.specifiers && node.specifiers.length) {
-        for (let _i4 = 0, _node$specifiers = node.specifiers; _i4 < _node$specifiers.length; _i4++) {
-          const specifier = _node$specifiers[_i4];
+        for (let _i3 = 0, _node$specifiers = node.specifiers; _i3 < _node$specifiers.length; _i3++) {
+          const specifier = _node$specifiers[_i3];
           this.checkDuplicateExports(specifier, specifier.exported.name);
 
           if (!isFrom && specifier.local) {
@@ -1380,8 +1359,8 @@ class StatementParser extends _expression.default {
           if (!id) throw new Error("Assertion failure");
           this.checkDuplicateExports(node, id.name);
         } else if (node.declaration.type === "VariableDeclaration") {
-          for (let _i5 = 0, _node$declaration$dec = node.declaration.declarations; _i5 < _node$declaration$dec.length; _i5++) {
-            const declaration = _node$declaration$dec[_i5];
+          for (let _i4 = 0, _node$declaration$dec = node.declaration.declarations; _i4 < _node$declaration$dec.length; _i4++) {
+            const declaration = _node$declaration$dec[_i4];
             this.checkDeclaration(declaration.id);
           }
         }
@@ -1394,7 +1373,7 @@ class StatementParser extends _expression.default {
       const isClass = node.declaration && (node.declaration.type === "ClassDeclaration" || node.declaration.type === "ClassExpression");
 
       if (!node.declaration || !isClass) {
-        throw this.raise(node.start, _location.Errors.UnsupportedDecoratorExport);
+        throw this.raise(node.start, "You can only use decorators on an export when exporting a class");
       }
 
       this.takeDecorators(node.declaration);
@@ -1405,13 +1384,13 @@ class StatementParser extends _expression.default {
     if (node.type === "Identifier") {
       this.checkDuplicateExports(node, node.name);
     } else if (node.type === "ObjectPattern") {
-      for (let _i6 = 0, _node$properties = node.properties; _i6 < _node$properties.length; _i6++) {
-        const prop = _node$properties[_i6];
+      for (let _i5 = 0, _node$properties = node.properties; _i5 < _node$properties.length; _i5++) {
+        const prop = _node$properties[_i5];
         this.checkDeclaration(prop);
       }
     } else if (node.type === "ArrayPattern") {
-      for (let _i7 = 0, _node$elements = node.elements; _i7 < _node$elements.length; _i7++) {
-        const elem = _node$elements[_i7];
+      for (let _i6 = 0, _node$elements = node.elements; _i6 < _node$elements.length; _i6++) {
+        const elem = _node$elements[_i6];
 
         if (elem) {
           this.checkDeclaration(elem);
@@ -1428,7 +1407,7 @@ class StatementParser extends _expression.default {
 
   checkDuplicateExports(node, name) {
     if (this.state.exportedIdentifiers.indexOf(name) > -1) {
-      this.raise(node.start, name === "default" ? _location.Errors.DuplicateDefaultExport : _location.Errors.DuplicateExport, name);
+      this.raise(node.start, name === "default" ? "Only one default export allowed per module." : `\`${name}\` has already been exported. Exported identifiers must be unique.`);
     }
 
     this.state.exportedIdentifiers.push(name);
@@ -1517,7 +1496,7 @@ class StatementParser extends _expression.default {
         first = false;
       } else {
         if (this.eat(_types2.types.colon)) {
-          throw this.raise(this.state.start, _location.Errors.DestructureNamedImport);
+          throw this.raise(this.state.start, "ES2015 named imports do not destructure. " + "Use another statement for destructuring after the import.");
         }
 
         this.expect(_types2.types.comma);

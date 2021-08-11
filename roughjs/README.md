@@ -1,6 +1,6 @@
 # Rough.js
 
-<b>Rough.js</b> is a small (~9kB gzipped) graphics library that lets you draw in a _sketchy_, _hand-drawn-like_, style.
+<b>Rough.js</b> is a small (~8.5kB gzipped) graphics library that lets you draw in a _sketchy_, _hand-drawn-like_, style.
 The library defines primitives to draw lines, curves, arcs, polygons, circles, and ellipses. It also supports drawing [SVG paths](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths).
 
 Rough.js works with both [Canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) and [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG).
@@ -11,23 +11,13 @@ Rough.js works with both [Canvas](https://developer.mozilla.org/en-US/docs/Web/A
 
 ## Install
 
-from npm:
+The latest Rough.js can be downloaded from the [dist folder](https://github.com/pshihn/rough/tree/master/dist).
+
+or from npm:
 
 ```
 npm install --save roughjs
 ```
-
-Or get the latest using unpkg: https://unpkg.com/roughjs@latest/bundled/rough.js
-
-
-If you are looking for bundled version in different formats, the npm package will have these in the following locations:
-
-CommonJS: `roughjs/bundled/rough.cjs.js`
-
-ESM: `roughjs/bundled/rough.esm.js`
-
-Browser IIFE: `roughjs/bundled/rough.js`
-
 
 ## Usage
 
@@ -84,7 +74,7 @@ Fill styles can be: **hachure**(default), **solid**, **zigzag**, **cross-hatch**
 
 ### Sketching style
 
-![Rough.js rectangle](https://roughjs.com/images/m4.png)
+![Rough.js rectangle](https://roughjs.com/images/main/m4.png)
 
 ```js
 rc.rectangle(15, 15, 80, 80, { roughness: 0.5, fill: 'red' });

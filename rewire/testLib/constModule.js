@@ -9,7 +9,6 @@ const
 g = "g";
 const/*wtf this is valid*/h = "h";
 const /*and this is also*/i = "i";
-const{k} = {k: "k"};
 
 exports.a = function () {
     return a;
@@ -40,7 +39,4 @@ exports.i = function () {
 };
 exports.j = function () {
     return j;
-};
-exports.k = function () {
-    return k;
 };

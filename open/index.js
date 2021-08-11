@@ -46,10 +46,6 @@ module.exports = async (target, options) => {
 	// can be used on any platform.
 	if (options.url) {
 		target = encodeURI(target);
-
-		if (isWsl) {
-			target = target.replace(/&/g, '^&');
-		}
 	}
 
 	if (process.platform === 'darwin') {
@@ -81,10 +77,6 @@ module.exports = async (target, options) => {
 			// As a result, all double-quotes are stripped from the `target` and do not get to your desired destination.
 			target = `"${target}"`;
 			childProcessOptions.windowsVerbatimArguments = true;
-
-			if (options.app) {
-				options.app = `"${options.app}"`;
-			}
 		}
 
 		if (options.wait) {

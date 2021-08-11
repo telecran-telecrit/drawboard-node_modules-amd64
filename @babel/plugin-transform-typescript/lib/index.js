@@ -50,8 +50,7 @@ function registerGlobalType(programScope, name) {
 var _default = (0, _helperPluginUtils.declare)((api, {
   jsxPragma = "React",
   allowNamespaces = false,
-  allowDeclareFields = false,
-  onlyRemoveTypeImports = false
+  allowDeclareFields = false
 }) => {
   api.assertVersion(7);
   const JSX_ANNOTATION_REGEX = /\*?\s*@jsx\s+([^\s]+)/;
@@ -70,9 +69,7 @@ var _default = (0, _helperPluginUtils.declare)((api, {
           throw path.buildCodeFrameError(`Definietly assigned fields and fields with the 'declare' modifier cannot` + ` be initialized here, but only in the constructor`);
         }
 
-        if (!node.decorators) {
-          path.remove();
-        }
+        path.remove();
       } else if (!allowDeclareFields && !node.value && !node.decorators) {
         path.remove();
       }
@@ -82,7 +79,6 @@ var _default = (0, _helperPluginUtils.declare)((api, {
       if (node.readonly) node.readonly = null;
       if (node.optional) node.optional = null;
       if (node.typeAnnotation) node.typeAnnotation = null;
-      if (node.definite) node.definite = null;
     },
 
     method({
@@ -153,39 +149,32 @@ var _default = (0, _helperPluginUtils.declare)((api, {
 
         for (let stmt of path.get("body")) {
           if (_core.types.isImportDeclaration(stmt)) {
-            if (stmt.node.importKind === "type") {
-              stmt.remove();
+            if (stmt.node.specifiers.length === 0) {
               continue;
             }
 
-            if (!onlyRemoveTypeImports) {
-              if (stmt.node.specifiers.length === 0) {
-                continue;
-              }
+            let allElided = true;
+            const importsToRemove = [];
 
-              let allElided = true;
-              const importsToRemove = [];
+            for (const specifier of stmt.node.specifiers) {
+              const binding = stmt.scope.getBinding(specifier.local.name);
 
-              for (const specifier of stmt.node.specifiers) {
-                const binding = stmt.scope.getBinding(specifier.local.name);
-
-                if (binding && isImportTypeOnly({
-                  binding,
-                  programPath: path,
-                  jsxPragma: fileJsxPragma || jsxPragma
-                })) {
-                  importsToRemove.push(binding.path);
-                } else {
-                  allElided = false;
-                }
-              }
-
-              if (allElided) {
-                stmt.remove();
+              if (binding && isImportTypeOnly({
+                binding,
+                programPath: path,
+                jsxPragma: fileJsxPragma || jsxPragma
+              })) {
+                importsToRemove.push(binding.path);
               } else {
-                for (const importPath of importsToRemove) {
-                  importPath.remove();
-                }
+                allElided = false;
+              }
+            }
+
+            if (allElided) {
+              stmt.remove();
+            } else {
+              for (const importPath of importsToRemove) {
+                importPath.remove();
               }
             }
 
@@ -215,11 +204,6 @@ var _default = (0, _helperPluginUtils.declare)((api, {
       },
 
       ExportNamedDeclaration(path) {
-        if (path.node.exportKind === "type") {
-          path.remove();
-          return;
-        }
-
         if (!path.node.source && path.node.specifiers.length > 0 && path.node.specifiers.every(({
           local
         }) => isGlobalType(path, local.name))) {

@@ -1,15 +1,15 @@
 {
   "_args": [
     [
-      "@types/testing-library__react@10.0.1",
+      "@types/testing-library__react@9.1.3",
       "/home/pro/Solutions/drawboard-light"
     ]
   ],
   "_development": true,
-  "_from": "@types/testing-library__react@10.0.1",
-  "_id": "@types/testing-library__react@10.0.1",
+  "_from": "@types/testing-library__react@9.1.3",
+  "_id": "@types/testing-library__react@9.1.3",
   "_inBundle": false,
-  "_integrity": "sha512-RbDwmActAckbujLZeVO/daSfdL1pnjVqas25UueOkAY5r7vriavWf0Zqg7ghXMHa8ycD/kLkv8QOj31LmSYwww==",
+  "_integrity": "sha512-iCdNPKU3IsYwRK9JieSYAiX0+aYDXOGAmrC/3/M7AqqSDKnWWVv07X+Zk1uFSL7cMTUYzv4lQRfohucEocn5/w==",
   "_location": "/@types/testing-library__react",
   "_phantomChildren": {
     "@types/color-name": "1.1.1",
@@ -22,19 +22,19 @@
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "@types/testing-library__react@10.0.1",
+    "raw": "@types/testing-library__react@9.1.3",
     "name": "@types/testing-library__react",
     "escapedName": "@types%2ftesting-library__react",
     "scope": "@types",
-    "rawSpec": "10.0.1",
+    "rawSpec": "9.1.3",
     "saveSpec": null,
-    "fetchSpec": "10.0.1"
+    "fetchSpec": "9.1.3"
   },
   "_requiredBy": [
     "/@testing-library/react"
   ],
-  "_resolved": "https://registry.npmjs.org/@types/testing-library__react/-/testing-library__react-10.0.1.tgz",
-  "_spec": "10.0.1",
+  "_resolved": "https://registry.npmjs.org/@types/testing-library__react/-/testing-library__react-9.1.3.tgz",
+  "_spec": "9.1.3",
   "_where": "/home/pro/Solutions/drawboard-light",
   "bugs": {
     "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/issues"
@@ -63,10 +63,6 @@
     {
       "name": "Daniel Afonso",
       "url": "https://github.com/danieljcafonso"
-    },
-    {
-      "name": "Tim Swalling",
-      "url": "https://github.com/timswalling"
     }
   ],
   "dependencies": {
@@ -85,8 +81,8 @@
     "directory": "types/testing-library__react"
   },
   "scripts": {},
-  "typeScriptVersion": "3.1",
+  "typeScriptVersion": "3.0",
   "types": "index.d.ts",
-  "typesPublisherContentHash": "5fa62b1b37d6356fe874a1bd2fb14895ecaa436d9b49fa51a80441997e15711f",
-  "version": "10.0.1"
+  "typesPublisherContentHash": "f2e1a84151cd80636a6f2bc2478cbd0c7c33cadd2891115e5b3e965de7cee169",
+  "version": "9.1.3"
 }

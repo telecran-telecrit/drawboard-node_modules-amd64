@@ -119,7 +119,6 @@ exports.assertOpaqueType = assertOpaqueType;
 exports.assertQualifiedTypeIdentifier = assertQualifiedTypeIdentifier;
 exports.assertStringLiteralTypeAnnotation = assertStringLiteralTypeAnnotation;
 exports.assertStringTypeAnnotation = assertStringTypeAnnotation;
-exports.assertSymbolTypeAnnotation = assertSymbolTypeAnnotation;
 exports.assertThisTypeAnnotation = assertThisTypeAnnotation;
 exports.assertTupleTypeAnnotation = assertTupleTypeAnnotation;
 exports.assertTypeofTypeAnnotation = assertTypeofTypeAnnotation;
@@ -177,8 +176,6 @@ exports.assertExportDefaultSpecifier = assertExportDefaultSpecifier;
 exports.assertExportNamespaceSpecifier = assertExportNamespaceSpecifier;
 exports.assertPrivateName = assertPrivateName;
 exports.assertBigIntLiteral = assertBigIntLiteral;
-exports.assertRecordExpression = assertRecordExpression;
-exports.assertTupleExpression = assertTupleExpression;
 exports.assertTSParameterProperty = assertTSParameterProperty;
 exports.assertTSDeclareFunction = assertTSDeclareFunction;
 exports.assertTSDeclareMethod = assertTSDeclareMethod;
@@ -763,10 +760,6 @@ function assertStringTypeAnnotation(node, opts = {}) {
   assert("StringTypeAnnotation", node, opts);
 }
 
-function assertSymbolTypeAnnotation(node, opts = {}) {
-  assert("SymbolTypeAnnotation", node, opts);
-}
-
 function assertThisTypeAnnotation(node, opts = {}) {
   assert("ThisTypeAnnotation", node, opts);
 }
@@ -993,14 +986,6 @@ function assertPrivateName(node, opts = {}) {
 
 function assertBigIntLiteral(node, opts = {}) {
   assert("BigIntLiteral", node, opts);
-}
-
-function assertRecordExpression(node, opts = {}) {
-  assert("RecordExpression", node, opts);
-}
-
-function assertTupleExpression(node, opts = {}) {
-  assert("TupleExpression", node, opts);
 }
 
 function assertTSParameterProperty(node, opts = {}) {

@@ -1,4 +1,7 @@
 /**
+ * implements https://w3c.github.io/accname/
+ */
+/**
  * interface for an options-bag where `window.getComputedStyle` can be mocked
  */
 interface GetComputedStyleOptions {

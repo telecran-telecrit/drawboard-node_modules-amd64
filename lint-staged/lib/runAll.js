@@ -41,14 +41,14 @@ const shouldSkipApplyModifications = ctx => {
 
 const shouldSkipRevert = ctx => {
   // Should be skipped in case of unknown git errors
-  if (ctx.gitError && !ctx.gitApplyEmptyCommitError && !ctx.gitRestoreUnstagedChangesError) {
+  if (ctx.gitError && !ctx.gitApplyEmptyCommit && !ctx.gitApplyModificationsError) {
     return MESSAGES.GIT_ERROR
   }
 }
 
 const shouldSkipCleanup = ctx => {
   // Should be skipped in case of unknown git errors
-  if (ctx.gitError && !ctx.gitApplyEmptyCommitError && !ctx.gitRestoreUnstagedChangesError) {
+  if (ctx.gitError && !ctx.gitApplyEmptyCommit && !ctx.gitApplyModificationsError) {
     return MESSAGES.GIT_ERROR
   }
   // Should be skipped when reverting to original state fails
@@ -62,22 +62,20 @@ const shouldSkipCleanup = ctx => {
  *
  * @param {object} options
  * @param {Object} [options.allowEmpty] - Allow empty commits when tasks revert all staged changes
- * @param {boolean | number} [options.concurrent] - The number of tasks to run concurrently, or false to run tasks serially
  * @param {Object} [options.config] - Task configuration
  * @param {Object} [options.cwd] - Current working directory
- * @param {boolean} [options.debug] - Enable debug mode
  * @param {number} [options.maxArgLength] - Maximum argument string length
- * @param {boolean} [options.quiet] - Disable lint-staged’s own console output
  * @param {boolean} [options.relative] - Pass relative filepaths to tasks
  * @param {boolean} [options.shell] - Skip parsing of tasks for better shell support
- * @param {boolean} [options.stash] - Enable the backup stash, and revert in case of errors
+ * @param {boolean} [options.quiet] - Disable lint-staged’s own console output
+ * @param {boolean} [options.debug] - Enable debug mode
+ * @param {boolean | number} [options.concurrent] - The number of tasks to run concurrently, or false to run tasks serially
  * @param {Logger} logger
  * @returns {Promise}
  */
 const runAll = async (
   {
     allowEmpty = false,
-    concurrent = true,
     config,
     cwd = process.cwd(),
     debug = false,
@@ -85,17 +83,11 @@ const runAll = async (
     quiet = false,
     relative = false,
     shell = false,
-    stash = true
+    concurrent = true
   },
   logger = console
 ) => {
   debugLog('Running all linter scripts')
-
-  if (!stash) {
-    logger.warn(
-      `${symbols.warning} ${chalk.yellow('Skipping backup because `--no-stash` was used.')}`
-    )
-  }
 
   const { gitDir, gitConfigDir } = await resolveGitRepo(cwd)
   if (!gitDir) throw new Error('Current directory is not a git directory!')
@@ -106,7 +98,8 @@ const runAll = async (
 
   // If there are no files avoid executing any lint-staged logic
   if (files.length === 0) {
-    return logger.log(`${symbols.info} No staged files found.`)
+    logger.log('No staged files found.')
+    return 'No tasks to run.'
   }
 
   const stagedFileChunks = chunkFiles({ files, gitDir, maxArgLength, relative })
@@ -137,7 +130,9 @@ const runAll = async (
         shell
       })
 
-      hasDeprecatedGitAdd = subTasks.some(subTask => subTask.command === 'git add')
+      if (subTasks.some(subTask => subTask.command === 'git add')) {
+        hasDeprecatedGitAdd = true
+      }
 
       chunkListrTasks.push({
         title: `Running tasks for ${task.pattern}`,
@@ -194,38 +189,23 @@ const runAll = async (
     [
       {
         title: 'Preparing...',
-        task: ctx => git.prepare(ctx, stash)
-      },
-      {
-        title: 'Hiding unstaged changes to partially staged files...',
-        task: ctx => git.hideUnstagedChanges(ctx),
-        enabled: ctx => ctx.hasPartiallyStagedFiles
+        task: ctx => git.stashBackup(ctx)
       },
       ...listrTasks,
       {
         title: 'Applying modifications...',
         task: ctx => git.applyModifications(ctx),
-        // Always apply back unstaged modifications when skipping backup
-        skip: ctx => stash && shouldSkipApplyModifications(ctx)
-      },
-      {
-        title: 'Restoring unstaged changes to partially staged files...',
-        task: ctx => git.restoreUnstagedChanges(ctx),
-        enabled: ctx => ctx.hasPartiallyStagedFiles,
         skip: shouldSkipApplyModifications
       },
       {
-        title: 'Reverting to original state because of errors...',
+        title: 'Reverting to original state...',
         task: ctx => git.restoreOriginalState(ctx),
-        enabled: ctx =>
-          stash &&
-          (ctx.taskError || ctx.gitApplyEmptyCommitError || ctx.gitRestoreUnstagedChangesError),
+        enabled: ctx => ctx.taskError || ctx.gitApplyEmptyCommit || ctx.gitApplyModificationsError,
         skip: shouldSkipRevert
       },
       {
         title: 'Cleaning up...',
-        task: ctx => git.cleanup(ctx),
-        enabled: () => stash,
+        task: ctx => git.dropBackup(ctx),
         skip: shouldSkipCleanup
       }
     ],
@@ -235,7 +215,7 @@ const runAll = async (
   try {
     await runner.run({})
   } catch (error) {
-    if (error.context.gitApplyEmptyCommitError) {
+    if (error.context.gitApplyEmptyCommit) {
       logger.warn(`
   ${symbols.warning} ${chalk.yellow(`lint-staged prevented an empty git commit.
     Use the --allow-empty option to continue, or check your task configuration`)}
@@ -248,13 +228,13 @@ const runAll = async (
           `\n    The initial commit is needed for lint-staged to work.
     Please use the --no-verify flag to skip running lint-staged.`
         )
-      } else if (stash) {
+      } else {
         // No sense to show this if the backup stash itself is missing.
         logger.error(`  Any lost modifications can be restored from a git stash:
 
     > git stash list
     stash@{0}: On master: automatic lint-staged backup
-    > git stash apply --index stash@{0}\n`)
+    > git stash pop stash@{0}\n`)
       }
     }
 

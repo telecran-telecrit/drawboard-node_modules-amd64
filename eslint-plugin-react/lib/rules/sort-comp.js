@@ -125,7 +125,7 @@ module.exports = {
     // Public
     // --------------------------------------------------------------------------
 
-    const regExpRegExp = /\/(.*)\/([gimsuy]*)/;
+    const regExpRegExp = /\/(.*)\/([g|y|i|m]*)/;
 
     /**
      * Get indexes of the matching patterns in methods order configuration

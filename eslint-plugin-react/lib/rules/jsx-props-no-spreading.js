@@ -79,23 +79,11 @@ module.exports = {
     const exceptions = configuration.exceptions || DEFAULTS.exceptions;
     const isException = (tag, allExceptions) => allExceptions.indexOf(tag) !== -1;
     const isProperty = property => property.type === 'Property';
-    const getTagNameFromMemberExpression = node => `${node.property.parent.object.name}.${node.property.name}`;
     return {
       JSXSpreadAttribute(node) {
-        const jsxOpeningElement = node.parent.name;
-        const type = jsxOpeningElement.type;
-
-        let tagName;
-        if (type === 'JSXIdentifier') {
-          tagName = jsxOpeningElement.name;
-        } else if (type === 'JSXMemberExpression') {
-          tagName = getTagNameFromMemberExpression(jsxOpeningElement);
-        } else {
-          tagName = undefined;
-        }
-
+        const tagName = node.parent.name.name;
         const isHTMLTag = tagName && tagName[0] !== tagName[0].toUpperCase();
-        const isCustomTag = tagName && (tagName[0] === tagName[0].toUpperCase() || tagName.includes('.'));
+        const isCustomTag = tagName && tagName[0] === tagName[0].toUpperCase();
         if (
           isHTMLTag &&
           ((ignoreHtmlTags && !isException(tagName, exceptions)) ||

@@ -19,10 +19,6 @@ var _scopeflags = require("../util/scopeflags");
 
 var _util = require("./util");
 
-var _productionParameter = require("../util/production-parameter");
-
-var _location = require("./location");
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
@@ -45,7 +41,7 @@ class ExpressionParser extends _lval.default {
             refExpressionErrors.doubleProto = key.start;
           }
         } else {
-          this.raise(key.start, _location.Errors.DuplicateProto);
+          this.raise(key.start, "Redefinition of __proto__ property");
         }
       }
 
@@ -54,14 +50,13 @@ class ExpressionParser extends _lval.default {
   }
 
   getExpression() {
-    let paramFlags = _productionParameter.PARAM;
+    let scopeFlags = _scopeflags.SCOPE_PROGRAM;
 
     if (this.hasPlugin("topLevelAwait") && this.inModule) {
-      paramFlags |= _productionParameter.PARAM_AWAIT;
+      scopeFlags |= _scopeflags.SCOPE_ASYNC;
     }
 
-    this.scope.enter(_scopeflags.SCOPE_PROGRAM);
-    this.prodParam.enter(paramFlags);
+    this.scope.enter(scopeFlags);
     this.nextToken();
     const expr = this.parseExpression();
 
@@ -99,7 +94,7 @@ class ExpressionParser extends _lval.default {
     const startLoc = this.state.startLoc;
 
     if (this.isContextual("yield")) {
-      if (this.prodParam.hasYield) {
+      if (this.scope.inGenerator) {
         let left = this.parseYield(noIn);
 
         if (afterLeftParse) {
@@ -226,7 +221,7 @@ class ExpressionParser extends _lval.default {
         node.operator = operator;
 
         if (operator === "**" && left.type === "UnaryExpression" && (this.options.createParenthesizedExpressions || !(left.extra && left.extra.parenthesized))) {
-          this.raise(left.argument.start, _location.Errors.UnexpectedTokenUnaryExponentiation);
+          this.raise(left.argument.start, "Illegal expression. Wrap left hand side or entire exponentiation in parentheses.");
         }
 
         const op = this.state.type;
@@ -244,8 +239,8 @@ class ExpressionParser extends _lval.default {
         this.next();
 
         if (op === _types.types.pipeline && this.getPluginOption("pipelineOperator", "proposal") === "minimal") {
-          if (this.match(_types.types.name) && this.state.value === "await" && this.prodParam.hasAwait) {
-            throw this.raise(this.state.start, _location.Errors.UnexpectedAwaitAfterPipelineBody);
+          if (this.match(_types.types.name) && this.state.value === "await" && this.scope.inAsync) {
+            throw this.raise(this.state.start, `Unexpected "await" after pipeline body; await must have parentheses in minimal proposal`);
           }
         }
 
@@ -254,7 +249,7 @@ class ExpressionParser extends _lval.default {
         const nextOp = this.state.type;
 
         if (coalesce && (nextOp === _types.types.logicalOR || nextOp === _types.types.logicalAND) || logical && nextOp === _types.types.nullishCoalescing) {
-          throw this.raise(this.state.start, _location.Errors.MixingCoalesceWithLogical);
+          throw this.raise(this.state.start, `Nullish coalescing operator(??) requires parens when mixing with logical operators`);
         }
 
         return this.parseExprOp(node, leftStartPos, leftStartLoc, minPrec, noIn);
@@ -316,9 +311,9 @@ class ExpressionParser extends _lval.default {
         const arg = node.argument;
 
         if (arg.type === "Identifier") {
-          this.raise(node.start, _location.Errors.StrictDelete);
+          this.raise(node.start, "Deleting local variable in strict mode");
         } else if (arg.type === "MemberExpression" && arg.property.type === "PrivateName") {
-          this.raise(node.start, _location.Errors.DeletePrivateField);
+          this.raise(node.start, "Deleting a private field is not allowed");
         }
       }
 
@@ -364,15 +359,8 @@ class ExpressionParser extends _lval.default {
     };
 
     do {
-      const oldMaybeInAsyncArrowHead = this.state.maybeInAsyncArrowHead;
-
-      if (state.maybeAsyncArrow) {
-        this.state.maybeInAsyncArrowHead = true;
-      }
-
       base = this.parseSubscript(base, startPos, startLoc, noCalls, state);
       state.maybeAsyncArrow = false;
-      this.state.maybeInAsyncArrowHead = oldMaybeInAsyncArrowHead;
     } while (!state.stop);
 
     return base;
@@ -410,7 +398,7 @@ class ExpressionParser extends _lval.default {
 
       if (node.property.type === "PrivateName") {
         if (node.object.type === "Super") {
-          this.raise(startPos, _location.Errors.SuperPrivateField);
+          this.raise(startPos, "Private fields can't be accessed on super");
         }
 
         this.classScope.usePrivateName(node.property.id.name, node.property.start);
@@ -478,7 +466,7 @@ class ExpressionParser extends _lval.default {
     if (typeArguments) node.typeParameters = typeArguments;
 
     if (state.optionalChainMember) {
-      this.raise(startPos, _location.Errors.OptionalChainingNoTemplate);
+      this.raise(startPos, "Tagged Template Literals are not allowed in optionalChain");
     }
 
     return this.finishNode(node, "TaggedTemplateExpression");
@@ -491,12 +479,12 @@ class ExpressionParser extends _lval.default {
   finishCallExpression(node, optional) {
     if (node.callee.type === "Import") {
       if (node.arguments.length !== 1) {
-        this.raise(node.start, _location.Errors.ImportCallArity);
+        this.raise(node.start, "import() requires exactly one argument");
       } else {
         const importArg = node.arguments[0];
 
         if (importArg && importArg.type === "SpreadElement") {
-          this.raise(importArg.start, _location.Errors.ImportCallSpreadArgument);
+          this.raise(importArg.start, "... is not allowed in import()");
         }
       }
     }
@@ -519,7 +507,7 @@ class ExpressionParser extends _lval.default {
 
         if (this.match(close)) {
           if (dynamicImport) {
-            this.raise(this.state.lastTokStart, _location.Errors.ImportCallArgumentTrailingComma);
+            this.raise(this.state.lastTokStart, "Trailing comma is disallowed inside import(...) arguments");
           }
 
           if (nodeForExtra) {
@@ -577,13 +565,13 @@ class ExpressionParser extends _lval.default {
         this.next();
 
         if (this.match(_types.types.parenL) && !this.scope.allowDirectSuper && !this.options.allowSuperOutsideMethod) {
-          this.raise(node.start, _location.Errors.SuperNotAllowed);
+          this.raise(node.start, "super() is only valid inside a class constructor of a subclass. " + "Maybe a typo in the method name ('constructor') or not extending another class?");
         } else if (!this.scope.allowSuper && !this.options.allowSuperOutsideMethod) {
-          this.raise(node.start, _location.Errors.UnexpectedSuper);
+          this.raise(node.start, "super is only allowed in object methods and classes");
         }
 
         if (!this.match(_types.types.parenL) && !this.match(_types.types.bracketL) && !this.match(_types.types.dot)) {
-          this.raise(node.start, _location.Errors.UnsupportedSuper);
+          this.raise(node.start, "super can only be used with function calls (i.e. super()) or " + "in property accesses (i.e. super.prop or super[prop])");
         }
 
         return this.finishNode(node, "Super");
@@ -597,7 +585,7 @@ class ExpressionParser extends _lval.default {
         }
 
         if (!this.match(_types.types.parenL)) {
-          this.raise(this.state.lastTokStart, _location.Errors.UnsupportedImport);
+          this.raise(this.state.lastTokStart, "import can only be used in import() or import.meta");
         }
 
         return this.finishNode(node, "Import");
@@ -625,18 +613,15 @@ class ExpressionParser extends _lval.default {
             return this.parseFunction(node, undefined, true);
           } else if (canBeArrow && !containsEsc && id.name === "async" && this.match(_types.types.name) && !this.canInsertSemicolon()) {
             const oldMaybeInArrowParameters = this.state.maybeInArrowParameters;
-            const oldMaybeInAsyncArrowHead = this.state.maybeInAsyncArrowHead;
             const oldYieldPos = this.state.yieldPos;
             const oldAwaitPos = this.state.awaitPos;
             this.state.maybeInArrowParameters = true;
-            this.state.maybeInAsyncArrowHead = true;
             this.state.yieldPos = -1;
             this.state.awaitPos = -1;
             const params = [this.parseIdentifier()];
             this.expect(_types.types.arrow);
             this.checkYieldAwaitInDefaultParams();
             this.state.maybeInArrowParameters = oldMaybeInArrowParameters;
-            this.state.maybeInAsyncArrowHead = oldMaybeInAsyncArrowHead;
             this.state.yieldPos = oldYieldPos;
             this.state.awaitPos = oldAwaitPos;
             this.parseArrowExpression(node, params, true);
@@ -694,20 +679,6 @@ class ExpressionParser extends _lval.default {
       case _types.types.parenL:
         return this.parseParenAndDistinguishExpression(canBeArrow);
 
-      case _types.types.bracketBarL:
-      case _types.types.bracketHashL:
-        {
-          this.expectPlugin("recordAndTuple");
-          const oldInFSharpPipelineDirectBody = this.state.inFSharpPipelineDirectBody;
-          const close = this.state.type === _types.types.bracketBarL ? _types.types.bracketBarR : _types.types.bracketR;
-          this.state.inFSharpPipelineDirectBody = false;
-          node = this.startNode();
-          this.next();
-          node.elements = this.parseExprList(close, true, refExpressionErrors, node);
-          this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
-          return this.finishNode(node, "TupleExpression");
-        }
-
       case _types.types.bracketL:
         {
           const oldInFSharpPipelineDirectBody = this.state.inFSharpPipelineDirectBody;
@@ -724,23 +695,11 @@ class ExpressionParser extends _lval.default {
           return this.finishNode(node, "ArrayExpression");
         }
 
-      case _types.types.braceBarL:
-      case _types.types.braceHashL:
-        {
-          this.expectPlugin("recordAndTuple");
-          const oldInFSharpPipelineDirectBody = this.state.inFSharpPipelineDirectBody;
-          const close = this.state.type === _types.types.braceBarL ? _types.types.braceBarR : _types.types.braceR;
-          this.state.inFSharpPipelineDirectBody = false;
-          const ret = this.parseObj(close, false, true, refExpressionErrors);
-          this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
-          return ret;
-        }
-
       case _types.types.braceL:
         {
           const oldInFSharpPipelineDirectBody = this.state.inFSharpPipelineDirectBody;
           this.state.inFSharpPipelineDirectBody = false;
-          const ret = this.parseObj(_types.types.braceR, false, false, refExpressionErrors);
+          const ret = this.parseObj(false, refExpressionErrors);
           this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
           return ret;
         }
@@ -772,7 +731,7 @@ class ExpressionParser extends _lval.default {
           if (callee.type === "MemberExpression") {
             return this.finishNode(node, "BindExpression");
           } else {
-            throw this.raise(callee.start, _location.Errors.UnsupportedBind);
+            throw this.raise(callee.start, "Binding should be performed on object property.");
           }
         }
 
@@ -782,13 +741,13 @@ class ExpressionParser extends _lval.default {
             node = this.startNode();
 
             if (this.getPluginOption("pipelineOperator", "proposal") !== "smart") {
-              this.raise(node.start, _location.Errors.PrimaryTopicRequiresSmartPipeline);
+              this.raise(node.start, "Primary Topic Reference found but pipelineOperator not passed 'smart' for 'proposal' option.");
             }
 
             this.next();
 
             if (!this.primaryTopicReferenceIsAllowedInCurrentTopicContext()) {
-              this.raise(node.start, _location.Errors.PrimaryTopicNotAllowed);
+              this.raise(node.start, `Topic reference was used in a lexical context without topic binding`);
             }
 
             this.registerTopicReference();
@@ -815,7 +774,7 @@ class ExpressionParser extends _lval.default {
       this.expectOnePlugin(["classPrivateProperties", "classPrivateMethods"]);
 
       if (!isPrivateNameAllowed) {
-        this.raise(this.state.pos, _location.Errors.UnexpectedPrivateField);
+        this.raise(this.state.pos, "Private names can only be used as the name of a class element (i.e. class C { #p = 42; #m() {} } )\n or a property of member expression (i.e. this.#p).");
       }
 
       const node = this.startNode();
@@ -834,7 +793,7 @@ class ExpressionParser extends _lval.default {
     this.next();
     meta = this.createIdentifier(meta, "function");
 
-    if (this.prodParam.hasYield && this.eat(_types.types.dot)) {
+    if (this.scope.inGenerator && this.eat(_types.types.dot)) {
       return this.parseMetaProperty(node, meta, "sent");
     }
 
@@ -856,7 +815,7 @@ class ExpressionParser extends _lval.default {
     node.property = this.parseIdentifier(true);
 
     if (node.property.name !== propertyName || containsEsc) {
-      this.raise(node.property.start, _location.Errors.UnsupportedMetaProperty, meta.name, propertyName);
+      this.raise(node.property.start, `The only valid meta property for ${meta.name} is ${meta.name}.${propertyName}`);
     }
 
     return this.finishNode(node, "MetaProperty");
@@ -870,14 +829,14 @@ class ExpressionParser extends _lval.default {
       this.expectPlugin("importMeta");
 
       if (!this.inModule) {
-        this.raiseWithData(id.start, {
+        this.raise(id.start, `import.meta may appear only with 'sourceType: "module"'`, {
           code: "BABEL_PARSER_SOURCETYPE_MODULE_REQUIRED"
-        }, _location.Errors.ImportMetaOutsideModule);
+        });
       }
 
       this.sawUnambiguousESM = true;
     } else if (!this.hasPlugin("importMeta")) {
-      this.raise(id.start, _location.Errors.ImportCallArityLtOne);
+      this.raise(id.start, `Dynamic imports require a parameter: import('a.js')`);
     }
 
     return this.parseMetaProperty(node, id, "meta");
@@ -950,10 +909,6 @@ class ExpressionParser extends _lval.default {
     let arrowNode = this.startNodeAt(startPos, startLoc);
 
     if (canBeArrow && this.shouldParseArrow() && (arrowNode = this.parseArrow(arrowNode))) {
-      if (!this.isAwaitAllowed() && !this.state.maybeInAsyncArrowHead) {
-        this.state.awaitPos = oldAwaitPos;
-      }
-
       this.checkYieldAwaitInDefaultParams();
       this.state.yieldPos = oldYieldPos;
       this.state.awaitPos = oldAwaitPos;
@@ -1027,7 +982,7 @@ class ExpressionParser extends _lval.default {
       const metaProp = this.parseMetaProperty(node, meta, "target");
 
       if (!this.scope.inNonArrowFunction && !this.scope.inClass) {
-        let error = _location.Errors.UnexpectedNewTarget;
+        let error = "new.target can only be used in functions";
 
         if (this.hasPlugin("classProperties")) {
           error += " or class properties";
@@ -1042,11 +997,11 @@ class ExpressionParser extends _lval.default {
     node.callee = this.parseNoCallExpr();
 
     if (node.callee.type === "Import") {
-      this.raise(node.callee.start, _location.Errors.ImportCallNotNewExpression);
+      this.raise(node.callee.start, "Cannot use new with import(...)");
     } else if (node.callee.type === "OptionalMemberExpression" || node.callee.type === "OptionalCallExpression") {
-      this.raise(this.state.lastTokEnd, _location.Errors.OptionalChainingNoNew);
+      this.raise(this.state.lastTokEnd, "constructors in/after an Optional Chain are not allowed");
     } else if (this.eat(_types.types.questionDot)) {
-      this.raise(this.state.start, _location.Errors.OptionalChainingNoNew);
+      this.raise(this.state.start, "constructors in/after an Optional Chain are not allowed");
     }
 
     this.parseNewArguments(node);
@@ -1068,7 +1023,7 @@ class ExpressionParser extends _lval.default {
 
     if (this.state.value === null) {
       if (!isTagged) {
-        this.raise(this.state.start + 1, _location.Errors.InvalidEscapeSequenceTemplate);
+        this.raise(this.state.start + 1, "Invalid escape sequence in template");
       }
     }
 
@@ -1099,20 +1054,20 @@ class ExpressionParser extends _lval.default {
     return this.finishNode(node, "TemplateLiteral");
   }
 
-  parseObj(close, isPattern, isRecord, refExpressionErrors) {
+  parseObj(isPattern, refExpressionErrors) {
     const propHash = Object.create(null);
     let first = true;
     const node = this.startNode();
     node.properties = [];
     this.next();
 
-    while (!this.eat(close)) {
+    while (!this.eat(_types.types.braceR)) {
       if (first) {
         first = false;
       } else {
         this.expect(_types.types.comma);
 
-        if (this.match(close)) {
+        if (this.match(_types.types.braceR)) {
           this.addExtra(node, "trailingComma", this.state.lastTokStart);
           this.next();
           break;
@@ -1132,15 +1087,7 @@ class ExpressionParser extends _lval.default {
       node.properties.push(prop);
     }
 
-    let type = "ObjectExpression";
-
-    if (isPattern) {
-      type = "ObjectPattern";
-    } else if (isRecord) {
-      type = "RecordExpression";
-    }
-
-    return this.finishNode(node, type);
+    return this.finishNode(node, isPattern ? "ObjectPattern" : "ObjectExpression");
   }
 
   isAsyncProp(prop) {
@@ -1152,7 +1099,7 @@ class ExpressionParser extends _lval.default {
 
     if (this.match(_types.types.at)) {
       if (this.hasPlugin("decorators")) {
-        this.raise(this.state.start, _location.Errors.UnsupportedPropertyDecorator);
+        this.raise(this.state.start, "Stage 2 decorators disallow object literal property decorators");
       }
 
       while (this.match(_types.types.at)) {
@@ -1224,14 +1171,14 @@ class ExpressionParser extends _lval.default {
 
     if (method.params.length !== paramCount) {
       if (method.kind === "get") {
-        this.raise(start, _location.Errors.BadGetterArity);
+        this.raise(start, "getter must not have any formal parameters");
       } else {
-        this.raise(start, _location.Errors.BadSetterArity);
+        this.raise(start, "setter must have exactly one formal parameter");
       }
     }
 
     if (method.kind === "set" && method.params[method.params.length - 1].type === "RestElement") {
-      this.raise(start, _location.Errors.BadSetterRestParameter);
+      this.raise(start, "setter function argument must not be a rest parameter");
     }
   }
 
@@ -1321,11 +1268,9 @@ class ExpressionParser extends _lval.default {
     this.initFunction(node, isAsync);
     node.generator = !!isGenerator;
     const allowModifiers = isConstructor;
-    this.scope.enter(_scopeflags.SCOPE_FUNCTION | _scopeflags.SCOPE_SUPER | (inClassScope ? _scopeflags.SCOPE_CLASS : 0) | (allowDirectSuper ? _scopeflags.SCOPE_DIRECT_SUPER : 0));
-    this.prodParam.enter((0, _productionParameter.functionFlags)(isAsync, node.generator));
+    this.scope.enter((0, _scopeflags.functionFlags)(isAsync, node.generator) | _scopeflags.SCOPE_SUPER | (inClassScope ? _scopeflags.SCOPE_CLASS : 0) | (allowDirectSuper ? _scopeflags.SCOPE_DIRECT_SUPER : 0));
     this.parseFunctionParams(node, allowModifiers);
     this.parseFunctionBodyAndFinish(node, type, true);
-    this.prodParam.exit();
     this.scope.exit();
     this.state.yieldPos = oldYieldPos;
     this.state.awaitPos = oldAwaitPos;
@@ -1333,8 +1278,7 @@ class ExpressionParser extends _lval.default {
   }
 
   parseArrowExpression(node, params, isAsync, trailingCommaPos) {
-    this.scope.enter(_scopeflags.SCOPE_FUNCTION | _scopeflags.SCOPE_ARROW);
-    this.prodParam.enter((0, _productionParameter.functionFlags)(isAsync, false));
+    this.scope.enter((0, _scopeflags.functionFlags)(isAsync, false) | _scopeflags.SCOPE_ARROW);
     this.initFunction(node, isAsync);
     const oldMaybeInArrowParameters = this.state.maybeInArrowParameters;
     const oldYieldPos = this.state.yieldPos;
@@ -1349,7 +1293,6 @@ class ExpressionParser extends _lval.default {
     this.state.yieldPos = -1;
     this.state.awaitPos = -1;
     this.parseFunctionBody(node, true);
-    this.prodParam.exit();
     this.scope.exit();
     this.state.maybeInArrowParameters = oldMaybeInArrowParameters;
     this.state.yieldPos = oldYieldPos;
@@ -1368,6 +1311,8 @@ class ExpressionParser extends _lval.default {
 
   parseFunctionBody(node, allowExpression, isMethod = false) {
     const isExpression = allowExpression && !this.match(_types.types.braceL);
+    const oldStrict = this.state.strict;
+    let useStrict = false;
     const oldInParameters = this.state.inParameters;
     this.state.inParameters = false;
 
@@ -1375,30 +1320,32 @@ class ExpressionParser extends _lval.default {
       node.body = this.parseMaybeAssign();
       this.checkParams(node, false, allowExpression, false);
     } else {
-      const oldStrict = this.state.strict;
+      const nonSimple = !this.isSimpleParamList(node.params);
+
+      if (!oldStrict || nonSimple) {
+        useStrict = this.strictDirective(this.state.end);
+
+        if (useStrict && nonSimple) {
+          const errorPos = (node.kind === "method" || node.kind === "constructor") && !!node.key ? node.key.end : node.start;
+          this.raise(errorPos, "Illegal 'use strict' directive in function with non-simple parameter list");
+        }
+      }
+
       const oldLabels = this.state.labels;
       this.state.labels = [];
-      this.prodParam.enter(this.prodParam.currentFlags() | _productionParameter.PARAM_RETURN);
-      node.body = this.parseBlock(true, false, hasStrictModeDirective => {
-        const nonSimple = !this.isSimpleParamList(node.params);
-
-        if (hasStrictModeDirective && nonSimple) {
-          const errorPos = (node.kind === "method" || node.kind === "constructor") && !!node.key ? node.key.end : node.start;
-          this.raise(errorPos, _location.Errors.IllegalLanguageModeDirective);
-        }
-
-        const strictModeChanged = !oldStrict && this.state.strict;
-        this.checkParams(node, !this.state.strict && !allowExpression && !isMethod && !nonSimple, allowExpression, strictModeChanged);
-
-        if (this.state.strict && node.id) {
-          this.checkLVal(node.id, _scopeflags.BIND_OUTSIDE, undefined, "function name", undefined, strictModeChanged);
-        }
-      });
-      this.prodParam.exit();
+      if (useStrict) this.state.strict = true;
+      this.checkParams(node, !oldStrict && !useStrict && !allowExpression && !isMethod && !nonSimple, allowExpression, !oldStrict && useStrict);
+      node.body = this.parseBlock(true, false);
       this.state.labels = oldLabels;
     }
 
     this.state.inParameters = oldInParameters;
+
+    if (this.state.strict && node.id) {
+      this.checkLVal(node.id, _scopeflags.BIND_OUTSIDE, undefined, "function name", undefined, !oldStrict && useStrict);
+    }
+
+    this.state.strict = oldStrict;
   }
 
   isSimpleParamList(params) {
@@ -1456,7 +1403,7 @@ class ExpressionParser extends _lval.default {
       this.expectPlugin("partialApplication");
 
       if (!allowPlaceholder) {
-        this.raise(this.state.start, _location.Errors.UnexpectedArgumentPlaceholder);
+        this.raise(this.state.start, "Unexpected argument placeholder");
       }
 
       const node = this.startNode();
@@ -1507,49 +1454,49 @@ class ExpressionParser extends _lval.default {
   }
 
   checkReservedWord(word, startLoc, checkKeywords, isBinding) {
-    if (this.prodParam.hasYield && word === "yield") {
-      this.raise(startLoc, _location.Errors.YieldBindingIdentifier);
+    if (this.scope.inGenerator && word === "yield") {
+      this.raise(startLoc, "Can not use 'yield' as identifier inside a generator");
       return;
     }
 
     if (word === "await") {
-      if (this.prodParam.hasAwait) {
-        this.raise(startLoc, _location.Errors.AwaitBindingIdentifier);
+      if (this.scope.inAsync) {
+        this.raise(startLoc, "Can not use 'await' as identifier inside an async function");
         return;
       }
 
-      if (this.state.awaitPos === -1 && (this.state.maybeInAsyncArrowHead || this.isAwaitAllowed())) {
+      if (this.state.awaitPos === -1 && (this.state.maybeInArrowParameters || this.isAwaitAllowed())) {
         this.state.awaitPos = this.state.start;
       }
     }
 
     if (this.scope.inClass && !this.scope.inNonArrowFunction && word === "arguments") {
-      this.raise(startLoc, _location.Errors.ArgumentsDisallowedInInitializer);
+      this.raise(startLoc, "'arguments' is not allowed in class field initializer");
       return;
     }
 
     if (checkKeywords && (0, _identifier.isKeyword)(word)) {
-      this.raise(startLoc, _location.Errors.UnexpectedKeyword, word);
+      this.raise(startLoc, `Unexpected keyword '${word}'`);
       return;
     }
 
     const reservedTest = !this.state.strict ? _identifier.isReservedWord : isBinding ? _identifier.isStrictBindReservedWord : _identifier.isStrictReservedWord;
 
     if (reservedTest(word, this.inModule)) {
-      if (!this.prodParam.hasAwait && word === "await") {
-        this.raise(startLoc, _location.Errors.AwaitNotInAsyncFunction);
+      if (!this.scope.inAsync && word === "await") {
+        this.raise(startLoc, "Can not use keyword 'await' outside an async function");
       } else {
-        this.raise(startLoc, _location.Errors.UnexpectedReservedWord, word);
+        this.raise(startLoc, `Unexpected reserved word '${word}'`);
       }
     }
   }
 
   isAwaitAllowed() {
-    if (this.scope.inFunction) return this.prodParam.hasAwait;
+    if (this.scope.inFunction) return this.scope.inAsync;
     if (this.options.allowAwaitOutsideFunction) return true;
 
     if (this.hasPlugin("topLevelAwait")) {
-      return this.inModule && this.prodParam.hasAwait;
+      return this.inModule && this.scope.inAsync;
     }
 
     return false;
@@ -1560,13 +1507,13 @@ class ExpressionParser extends _lval.default {
     this.next();
 
     if (this.state.inParameters) {
-      this.raise(node.start, _location.Errors.AwaitExpressionFormalParameter);
+      this.raise(node.start, "await is not allowed in async function parameters");
     } else if (this.state.awaitPos === -1) {
       this.state.awaitPos = node.start;
     }
 
     if (this.eat(_types.types.star)) {
-      this.raise(node.start, _location.Errors.ObsoleteAwaitStar);
+      this.raise(node.start, "await* has been removed from the async functions proposal. Use Promise.all() instead.");
     }
 
     if (!this.scope.inFunction && !this.options.allowAwaitOutsideFunction) {
@@ -1588,7 +1535,7 @@ class ExpressionParser extends _lval.default {
     const node = this.startNode();
 
     if (this.state.inParameters) {
-      this.raise(node.start, _location.Errors.YieldInParameter);
+      this.raise(node.start, "yield is not allowed in generator parameters");
     } else if (this.state.yieldPos === -1) {
       this.state.yieldPos = node.start;
     }
@@ -1609,7 +1556,7 @@ class ExpressionParser extends _lval.default {
   checkPipelineAtInfixOperator(left, leftStartPos) {
     if (this.getPluginOption("pipelineOperator", "proposal") === "smart") {
       if (left.type === "SequenceExpression") {
-        this.raise(leftStartPos, _location.Errors.PipelineHeadSequenceExpression);
+        this.raise(leftStartPos, `Pipeline head should not be a comma-separated sequence expression`);
       }
     }
   }
@@ -1622,9 +1569,9 @@ class ExpressionParser extends _lval.default {
 
   checkSmartPipelineBodyEarlyErrors(childExpression, pipelineStyle, startPos) {
     if (this.match(_types.types.arrow)) {
-      throw this.raise(this.state.start, _location.Errors.PipelineBodyNoArrow);
+      throw this.raise(this.state.start, `Unexpected arrow "=>" after pipeline body; arrow function in pipeline body must be parenthesized`);
     } else if (pipelineStyle === "PipelineTopicExpression" && childExpression.type === "SequenceExpression") {
-      this.raise(startPos, _location.Errors.PipelineBodySequenceExpression);
+      this.raise(startPos, `Pipeline body may not be a comma-separated sequence expression`);
     }
   }
 
@@ -1646,7 +1593,7 @@ class ExpressionParser extends _lval.default {
 
       case "PipelineTopicExpression":
         if (!this.topicReferenceWasUsedInCurrentTopicContext()) {
-          this.raise(startPos, _location.Errors.PipelineTopicUnused);
+          this.raise(startPos, `Pipeline is in topic style but does not use topic reference`);
         }
 
         bodyNode.expression = childExpression;

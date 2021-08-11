@@ -137,6 +137,7 @@ module.exports = function(
     'author',
     'contributors',
     'files',
+    'main',
     'browser',
     'bin',
     'man',

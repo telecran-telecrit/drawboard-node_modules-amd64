@@ -1,32 +1,78 @@
 {
   "_args": [
     [
-      "rewire@5.0.0",
+      "rewire@4.0.1",
       "/home/pro/Solutions/drawboard-light"
     ]
   ],
   "_development": true,
-  "_from": "rewire@5.0.0",
-  "_id": "rewire@5.0.0",
+  "_from": "rewire@4.0.1",
+  "_id": "rewire@4.0.1",
   "_inBundle": false,
-  "_integrity": "sha512-1zfitNyp9RH5UDyGGLe9/1N0bMlPQ0WrX0Tmg11kMHBpqwPJI4gfPpP7YngFyLbFmhXh19SToAG0sKKEFcOIJA==",
+  "_integrity": "sha512-+7RQ/BYwTieHVXetpKhT11UbfF6v1kGhKFrtZN7UDL2PybMsSt/rpLWeEUGF5Ndsl1D5BxiCB14VDJyoX+noYw==",
   "_location": "/rewire",
-  "_phantomChildren": {},
+  "_phantomChildren": {
+    "babel-code-frame": "6.26.0",
+    "chalk": "2.4.2",
+    "circular-json": "0.3.3",
+    "cli-width": "2.2.0",
+    "co": "4.6.0",
+    "concat-stream": "1.6.2",
+    "escape-string-regexp": "1.0.5",
+    "eslint-visitor-keys": "1.1.0",
+    "esquery": "1.0.1",
+    "esrecurse": "4.2.1",
+    "estraverse": "4.3.0",
+    "esutils": "2.0.3",
+    "fast-json-stable-stringify": "2.1.0",
+    "functional-red-black-tree": "1.0.1",
+    "glob": "7.1.6",
+    "globals": "11.12.0",
+    "graceful-fs": "4.2.3",
+    "iconv-lite": "0.4.24",
+    "imurmurhash": "0.1.4",
+    "is-resolvable": "1.1.0",
+    "js-yaml": "3.13.1",
+    "json-stable-stringify-without-jsonify": "1.0.1",
+    "levn": "0.3.0",
+    "lodash": "4.17.15",
+    "minimatch": "3.0.4",
+    "mkdirp": "0.5.1",
+    "ms": "2.1.2",
+    "natural-compare": "1.4.0",
+    "object-assign": "4.1.1",
+    "optionator": "0.8.3",
+    "path-is-inside": "1.0.2",
+    "pluralize": "7.0.0",
+    "progress": "2.0.3",
+    "pseudomap": "1.0.2",
+    "require-uncached": "1.0.3",
+    "rimraf": "2.6.3",
+    "run-async": "2.3.0",
+    "rx-lite": "4.0.8",
+    "rx-lite-aggregates": "4.0.8",
+    "shebang-command": "1.2.0",
+    "signal-exit": "3.0.2",
+    "text-table": "0.2.0",
+    "through": "2.3.8",
+    "tmp": "0.0.33",
+    "which": "1.3.1"
+  },
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "rewire@5.0.0",
+    "raw": "rewire@4.0.1",
     "name": "rewire",
     "escapedName": "rewire",
-    "rawSpec": "5.0.0",
+    "rawSpec": "4.0.1",
     "saveSpec": null,
-    "fetchSpec": "5.0.0"
+    "fetchSpec": "4.0.1"
   },
   "_requiredBy": [
     "#DEV:/"
   ],
-  "_resolved": "https://registry.npmjs.org/rewire/-/rewire-5.0.0.tgz",
-  "_spec": "5.0.0",
+  "_resolved": "https://registry.npmjs.org/rewire/-/rewire-4.0.1.tgz",
+  "_spec": "4.0.1",
   "_where": "/home/pro/Solutions/drawboard-light",
   "author": {
     "name": "Johannes Ewald",
@@ -37,14 +83,13 @@
     "email": "mail@johannesewald.de"
   },
   "dependencies": {
-    "eslint": "^6.8.0"
+    "eslint": "^4.19.1"
   },
   "description": "Easy dependency injection for node.js unit testing",
   "devDependencies": {
     "coffeescript": "^2.1.1",
     "expect.js": "^0.3.1",
-    "mocha": "^7.1.0",
-    "rewire": "file://."
+    "mocha": "^4.0.1"
   },
   "homepage": "https://github.com/jhnns/rewire",
   "keywords": [
@@ -71,5 +116,5 @@
     "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha",
     "test": "mocha -R spec"
   },
-  "version": "5.0.0"
+  "version": "4.0.1"
 }

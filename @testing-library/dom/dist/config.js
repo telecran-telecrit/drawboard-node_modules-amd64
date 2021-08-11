@@ -1,10 +1,14 @@
 "use strict";
 
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.configure = configure;
 exports.getConfig = getConfig;
+
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
 var _prettyDom = require("./pretty-dom");
 
@@ -13,7 +17,7 @@ var _prettyDom = require("./pretty-dom");
 // './queries' are query functions.
 let config = {
   testIdAttribute: 'data-testid',
-  asyncUtilTimeout: 1000,
+  asyncUtilTimeout: 4500,
   // this is to support React's async `act` function.
   // forcing react-testing-library to wrap all async functions would've been
   // a total nightmare (consider wrapping every findBy* query and then also
@@ -27,9 +31,7 @@ let config = {
 
   // called when getBy* queries fail. (message, container) => Error
   getElementError(message, container) {
-    const error = new Error([message, (0, _prettyDom.prettyDOM)(container)].filter(Boolean).join('\n\n'));
-    error.name = 'TestingLibraryElementError';
-    return error;
+    return new Error([message, (0, _prettyDom.prettyDOM)(container)].filter(Boolean).join('\n\n'));
   }
 
 };
@@ -42,9 +44,7 @@ function configure(newConfig) {
   } // Merge the incoming config delta
 
 
-  config = { ...config,
-    ...newConfig
-  };
+  config = (0, _extends2.default)({}, config, {}, newConfig);
 }
 
 function getConfig() {

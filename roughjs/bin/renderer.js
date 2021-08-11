@@ -41,25 +41,6 @@ export function curve(points, o) {
     const o2 = _curveWithOffset(points, 1.5 * (1 + o.roughness * 0.22), o);
     return { type: 'path', ops: o1.concat(o2) };
 }
-export function curveAsBezierPoints(points, o) {
-    const bez = [];
-    if (points.length >= 3) {
-        const ops = _curveWithOffset(points, 1 * (1 + o.roughness * 0.2), o);
-        ops.forEach((op) => {
-            switch (op.op) {
-                case 'move':
-                    bez.push([op.data[0], op.data[1]]);
-                    break;
-                case 'bcurveTo':
-                    bez.push([op.data[0], op.data[1]]);
-                    bez.push([op.data[2], op.data[3]]);
-                    bez.push([op.data[4], op.data[5]]);
-                    break;
-            }
-        });
-    }
-    return bez;
-}
 export function ellipse(x, y, width, height, o) {
     const params = generateEllipseParams(width, height, o);
     return ellipseWithParams(x, y, o, params).opset;

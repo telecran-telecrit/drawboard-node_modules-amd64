@@ -31,7 +31,7 @@ Introduction
 Imagine you want to test this module:
 
 ```javascript
-// lib/myModule.js
+// lib/myModules.js
 // With rewire you can change all these variables
 var fs = require("fs"),
     path = "/somewhere/on/the/disk";

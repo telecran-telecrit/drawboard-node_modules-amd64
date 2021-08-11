@@ -1,15 +1,15 @@
 {
   "_args": [
     [
-      "@testing-library/dom@7.2.0",
+      "@testing-library/dom@6.15.0",
       "/home/pro/Solutions/drawboard-light"
     ]
   ],
   "_development": true,
-  "_from": "@testing-library/dom@7.2.0",
-  "_id": "@testing-library/dom@7.2.0",
+  "_from": "@testing-library/dom@6.15.0",
+  "_id": "@testing-library/dom@6.15.0",
   "_inBundle": false,
-  "_integrity": "sha512-K1Sao38VxsTrjTkFkzeW8m/oCtgCI5lANCE7u9ZaF+TTL3uKuiZ+vazeurxjvRHAsE6PvXjOIl6JFuZfgcWJSQ==",
+  "_integrity": "sha512-8N24c4XwOigPicwc8n4ECgEoJW2/mMzRJBxu4Uo0zhLERZTbNzqpL5fyCigu7JGUXX+ITuiK4z9/lnHbYRHLwQ==",
   "_location": "/@testing-library/dom",
   "_phantomChildren": {
     "@babel/runtime-corejs3": "7.8.7",
@@ -23,34 +23,36 @@
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "@testing-library/dom@7.2.0",
+    "raw": "@testing-library/dom@6.15.0",
     "name": "@testing-library/dom",
     "escapedName": "@testing-library%2fdom",
     "scope": "@testing-library",
-    "rawSpec": "7.2.0",
+    "rawSpec": "6.15.0",
     "saveSpec": null,
-    "fetchSpec": "7.2.0"
+    "fetchSpec": "6.15.0"
   },
   "_requiredBy": [
     "/@testing-library/react"
   ],
-  "_resolved": "https://registry.npmjs.org/@testing-library/dom/-/dom-7.2.0.tgz",
-  "_spec": "7.2.0",
+  "_resolved": "https://registry.npmjs.org/@testing-library/dom/-/dom-6.15.0.tgz",
+  "_spec": "6.15.0",
   "_where": "/home/pro/Solutions/drawboard-light",
   "author": {
     "name": "Kent C. Dodds",
-    "email": "me@kentcdodds.com",
-    "url": "https://kentcdodds.com"
+    "email": "kent@doddsfamily.us",
+    "url": "https://kentcdodds.com/"
   },
   "bugs": {
     "url": "https://github.com/testing-library/dom-testing-library/issues"
   },
   "dependencies": {
-    "@babel/runtime": "^7.9.2",
-    "@types/testing-library__dom": "^7.0.0",
+    "@babel/runtime": "^7.8.4",
+    "@sheerun/mutationobserver-shim": "^0.3.2",
+    "@types/testing-library__dom": "^6.12.1",
     "aria-query": "^4.0.2",
-    "dom-accessibility-api": "^0.4.2",
-    "pretty-format": "^25.1.0"
+    "dom-accessibility-api": "^0.3.0",
+    "pretty-format": "^25.1.0",
+    "wait-for-expect": "^3.0.2"
   },
   "description": "Simple and complete DOM testing utilities that encourage good testing practices.",
   "devDependencies": {
@@ -58,19 +60,18 @@
     "jest-in-case": "^1.0.2",
     "jest-serializer-ansi": "^1.0.3",
     "jest-watch-select-projects": "^2.0.0",
-    "jsdom": "^16.2.1",
-    "kcd-scripts": "^5.6.0"
+    "jsdom": "^16.2.0",
+    "kcd-scripts": "^5.4.0"
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=8"
   },
   "eslintConfig": {
     "extends": "./node_modules/kcd-scripts/eslint.js",
     "rules": {
       "import/prefer-default-export": "off",
       "import/no-unassigned-import": "off",
-      "import/no-useless-path-segments": "off",
-      "no-console": "off"
+      "import/no-useless-path-segments": "off"
     }
   },
   "eslintIgnore": [
@@ -82,6 +83,11 @@
     "dist"
   ],
   "homepage": "https://github.com/testing-library/dom-testing-library#readme",
+  "husky": {
+    "hooks": {
+      "pre-commit": "kcd-scripts pre-commit"
+    }
+  },
   "keywords": [
     "testing",
     "ui",
@@ -112,5 +118,5 @@
   },
   "source": "src/index.js",
   "umd:main": "dist/@testing-library/dom.umd.js",
-  "version": "7.2.0"
+  "version": "6.15.0"
 }

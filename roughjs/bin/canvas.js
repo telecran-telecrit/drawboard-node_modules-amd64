@@ -23,8 +23,7 @@ export class RoughCanvas {
                 case 'fillPath':
                     ctx.save();
                     ctx.fillStyle = o.fill || '';
-                    const fillRule = (drawable.shape === 'curve' || drawable.shape === 'polygon') ? 'evenodd' : 'nonzero';
-                    this._drawToContext(ctx, drawing, fillRule);
+                    this._drawToContext(ctx, drawing);
                     ctx.restore();
                     break;
                 case 'fillSketch':
@@ -34,7 +33,7 @@ export class RoughCanvas {
                     this.ctx.save();
                     this.ctx.fillStyle = o.fill || '';
                     const p2d = new Path2D(drawing.path);
-                    this.ctx.fill(p2d, 'evenodd');
+                    this.ctx.fill(p2d);
                     this.ctx.restore();
                     break;
                 }
@@ -58,7 +57,7 @@ export class RoughCanvas {
                         this.ctx.save();
                         this.ctx.fillStyle = this.ctx.createPattern(hcanvas, 'repeat');
                         const p2d = new Path2D(drawing.path);
-                        this.ctx.fill(p2d, 'evenodd');
+                        this.ctx.fill(p2d);
                         this.ctx.restore();
                     }
                     else {
@@ -98,7 +97,7 @@ export class RoughCanvas {
         this._drawToContext(ctx, drawing);
         ctx.restore();
     }
-    _drawToContext(ctx, drawing, rule = 'nonzero') {
+    _drawToContext(ctx, drawing) {
         ctx.beginPath();
         for (const item of drawing.ops) {
             const data = item.data;
@@ -118,7 +117,7 @@ export class RoughCanvas {
             }
         }
         if (drawing.type === 'fillPath') {
-            ctx.fill(rule);
+            ctx.fill();
         }
         else {
             ctx.stroke();

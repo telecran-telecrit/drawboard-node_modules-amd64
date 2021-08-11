@@ -30,8 +30,6 @@
 
 'use strict';
 
-const matchAll = require('string.prototype.matchall');
-
 const astUtil = require('../util/ast');
 const docsUrl = require('../util/docsUrl');
 
@@ -99,11 +97,6 @@ module.exports = {
     function getFixerFunction(node, needed) {
       return function fix(fixer) {
         const indent = Array(needed + 1).join(indentChar);
-        if (node.type === 'JSXText' || node.type === 'Literal') {
-          const regExp = /\n[\t ]*(\S)/g;
-          const fixedText = node.raw.replace(regExp, (match, p1) => `\n${indent}${p1}`);
-          return fixer.replaceText(node, fixedText);
-        }
         return fixer.replaceTextRange(
           [node.range[0] - node.loc.start.column, node.range[0]],
           indent
@@ -297,29 +290,6 @@ module.exports = {
       }
     }
 
-    /**
-     * Check indent for Literal Node or JSXText Node
-     * @param {ASTNode} node The node to check
-     * @param {Number} indent needed indent
-     */
-    function checkLiteralNodeIndent(node, indent) {
-      const value = node.value;
-      const regExp = indentType === 'space' ? /\n( *)[\t ]*\S/g : /\n(\t*)[\t ]*\S/g;
-      const nodeIndentsPerLine = Array.from(
-        matchAll(String(value), regExp),
-        match => (match[1] ? match[1].length : 0)
-      );
-      const hasFirstInLineNode = nodeIndentsPerLine.length > 0;
-      if (
-        hasFirstInLineNode &&
-        !nodeIndentsPerLine.every(actualIndent => actualIndent === indent)
-      ) {
-        nodeIndentsPerLine.forEach((nodeIndent) => {
-          report(node, indent, nodeIndent);
-        });
-      }
-    }
-
     function handleOpeningElement(node) {
       const sourceCode = context.getSourceCode();
       let prevToken = sourceCode.getTokenBefore(node);
@@ -370,17 +340,6 @@ module.exports = {
       checkNodesIndent(firstInLine, indent);
     }
 
-    function handleLiteral(node) {
-      if (!node.parent) {
-        return;
-      }
-      if (node.parent.type !== 'JSXElement' && node.parent.type !== 'JSXFragment') {
-        return;
-      }
-      const parentNodeIndent = getNodeIndent(node.parent);
-      checkLiteralNodeIndent(node, parentNodeIndent + indentSize);
-    }
-
     return {
       JSXOpeningElement: handleOpeningElement,
       JSXOpeningFragment: handleOpeningElement,
@@ -393,9 +352,7 @@ module.exports = {
         }
         const parentNodeIndent = getNodeIndent(node.parent);
         checkNodesIndent(node, parentNodeIndent + indentSize);
-      },
-      Literal: handleLiteral,
-      JSXText: handleLiteral
+      }
     };
   }
 };

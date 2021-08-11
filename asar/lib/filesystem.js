@@ -1,20 +1,17 @@
 'use strict'
 
 const fs = require('./wrapped-fs')
-const os = require('os')
 const path = require('path')
-const { promisify } = require('util')
-const stream = require('stream')
+const tmp = require('tmp-promise')
+const UINT64 = require('cuint').UINT64
 
-const UINT32_MAX = 2 ** 32 - 1
-
-const pipeline = promisify(stream.pipeline)
+const UINT32_MAX = 4294967295
 
 class Filesystem {
   constructor (src) {
     this.src = path.resolve(src)
     this.header = { files: {} }
-    this.offset = BigInt(0)
+    this.offset = UINT64(0)
   }
 
   searchNodeFromDirectory (p) {
@@ -60,36 +57,48 @@ class Filesystem {
       return Promise.resolve()
     }
 
-    let size
+    const handler = (resolve, reject) => {
+      const size = file.transformed ? file.transformed.stat.size : file.stat.size
+
+      // JavaScript can not precisely present integers >= UINT32_MAX.
+      if (size > UINT32_MAX) {
+        const error = new Error(`${p}: file size can not be larger than 4.2GB`)
+        if (reject) {
+          return reject(error)
+        } else {
+          throw error
+        }
+      }
+
+      node.size = size
+      node.offset = this.offset.toString()
+      if (process.platform !== 'win32' && (file.stat.mode & 0o100)) {
+        node.executable = true
+      }
+      this.offset.add(UINT64(size))
+
+      return resolve ? resolve() : Promise.resolve()
+    }
 
     const transformed = options.transform && options.transform(p)
     if (transformed) {
-      const tmpdir = await fs.mkdtemp(path.join(os.tmpdir(), 'asar-'))
-      const tmpfile = path.join(tmpdir, path.basename(p))
-      const out = fs.createWriteStream(tmpfile)
-      const readStream = fs.createReadStream(p)
+      const tmpfile = await tmp.file()
+      return new Promise((resolve, reject) => {
+        const out = fs.createWriteStream(tmpfile.path)
+        const stream = fs.createReadStream(p)
 
-      await pipeline(readStream, transformed, out)
-      file.transformed = {
-        path: tmpfile,
-        stat: await fs.lstat(tmpfile)
-      }
-      size = file.transformed.stat.size
+        stream.pipe(transformed).pipe(out)
+        return out.on('close', async () => {
+          file.transformed = {
+            path: tmpfile.path,
+            stat: await fs.lstat(tmpfile.path)
+          }
+          return handler(resolve, reject)
+        })
+      })
     } else {
-      size = file.stat.size
+      return handler()
     }
-
-    // JavaScript cannot precisely present integers >= UINT32_MAX.
-    if (size > UINT32_MAX) {
-      throw new Error(`${p}: file size can not be larger than 4.2GB`)
-    }
-
-    node.size = size
-    node.offset = this.offset.toString()
-    if (process.platform !== 'win32' && (file.stat.mode & 0o100)) {
-      node.executable = true
-    }
-    this.offset += BigInt(size)
   }
 
   insertLink (p) {

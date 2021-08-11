@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var _exportNames = {
+  bindElementToQueries: true,
   within: true,
   queries: true,
   queryHelpers: true,
@@ -15,6 +16,12 @@ var _exportNames = {
   isInaccessible: true,
   configure: true
 };
+Object.defineProperty(exports, "bindElementToQueries", {
+  enumerable: true,
+  get: function () {
+    return _getQueriesForElement.getQueriesForElement;
+  }
+});
 Object.defineProperty(exports, "within", {
   enumerable: true,
   get: function () {
@@ -94,15 +101,15 @@ Object.keys(queryHelpers).forEach(function (key) {
   });
 });
 
-var _waitFor = require("./wait-for");
+var _wait = require("./wait");
 
-Object.keys(_waitFor).forEach(function (key) {
+Object.keys(_wait).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
   if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function () {
-      return _waitFor[key];
+      return _wait[key];
     }
   });
 });

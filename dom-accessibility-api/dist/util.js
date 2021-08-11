@@ -1,41 +1,35 @@
 "use strict";
-
-exports.__esModule = true;
-exports.isElement = isElement;
-exports.isHTMLInputElement = isHTMLInputElement;
-exports.isHTMLSelectElement = isHTMLSelectElement;
-exports.isHTMLTextAreaElement = isHTMLTextAreaElement;
-exports.safeWindow = safeWindow;
-
+Object.defineProperty(exports, "__esModule", { value: true });
 function isElement(node) {
-  return (// @ts-ignore
-    node !== null && node instanceof node.ownerDocument.defaultView.Element
-  );
+    return (
+    // @ts-ignore
+    node !== null && node instanceof node.ownerDocument.defaultView.Element);
 }
-
+exports.isElement = isElement;
 function isHTMLInputElement(node) {
-  return isElement(node) && // @ts-ignore
-  node instanceof node.ownerDocument.defaultView.HTMLInputElement;
+    return (isElement(node) &&
+        // @ts-ignore
+        node instanceof node.ownerDocument.defaultView.HTMLInputElement);
 }
-
+exports.isHTMLInputElement = isHTMLInputElement;
 function isHTMLSelectElement(node) {
-  return isElement(node) && // @ts-ignore
-  node instanceof node.ownerDocument.defaultView.HTMLSelectElement;
+    return (isElement(node) &&
+        // @ts-ignore
+        node instanceof node.ownerDocument.defaultView.HTMLSelectElement);
 }
-
+exports.isHTMLSelectElement = isHTMLSelectElement;
 function isHTMLTextAreaElement(node) {
-  return isElement(node) && // @ts-ignore
-  node instanceof node.ownerDocument.defaultView.HTMLTextAreaElement;
+    return (isElement(node) &&
+        // @ts-ignore
+        node instanceof node.ownerDocument.defaultView.HTMLTextAreaElement);
 }
-
+exports.isHTMLTextAreaElement = isHTMLTextAreaElement;
 function safeWindow(node) {
-  var _ref = node.ownerDocument === null ? node : node.ownerDocument,
-      defaultView = _ref.defaultView;
-
-  if (defaultView === null) {
-    throw new TypeError("no window available");
-  }
-
-  return defaultView;
+    const { defaultView } = node.ownerDocument === null ? node : node.ownerDocument;
+    if (defaultView === null) {
+        throw new TypeError("no window available");
+    }
+    return defaultView;
 }
+exports.safeWindow = safeWindow;
 //# sourceMappingURL=util.js.map

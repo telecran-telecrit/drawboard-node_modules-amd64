@@ -1,31 +1,31 @@
 {
   "_args": [
     [
-      "roughjs@4.1.4",
+      "roughjs@4.0.4",
       "/home/pro/Solutions/drawboard-light"
     ]
   ],
-  "_from": "roughjs@4.1.4",
-  "_id": "roughjs@4.1.4",
+  "_from": "roughjs@4.0.4",
+  "_id": "roughjs@4.0.4",
   "_inBundle": false,
-  "_integrity": "sha512-Mrx8r/NhTa9K+WuL2YfB5p40OAN/iRXXxmKUf/rxwgRh9Jrgz+dS2DOqnh0uMwzICJ2Rp0xTIFMgdqf0BCsmug==",
+  "_integrity": "sha512-rXmMGcALUlYIFKBbn9aWuxznPKOtnx9bouVC407/uneUNx0mT/4Mo2Z4TUieoCOT+rWmHnOQqVT1FvoN+L3baA==",
   "_location": "/roughjs",
   "_phantomChildren": {},
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "roughjs@4.1.4",
+    "raw": "roughjs@4.0.4",
     "name": "roughjs",
     "escapedName": "roughjs",
-    "rawSpec": "4.1.4",
+    "rawSpec": "4.0.4",
     "saveSpec": null,
-    "fetchSpec": "4.1.4"
+    "fetchSpec": "4.0.4"
   },
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "https://registry.npmjs.org/roughjs/-/roughjs-4.1.4.tgz",
-  "_spec": "4.1.4",
+  "_resolved": "https://registry.npmjs.org/roughjs/-/roughjs-4.0.4.tgz",
+  "_spec": "4.0.4",
   "_where": "/home/pro/Solutions/drawboard-light",
   "author": {
     "name": "Preet Shihn",
@@ -62,9 +62,8 @@
   },
   "scripts": {
     "build": "rm -rf bin && tsc && rollup -c",
-    "lint": "tslint -p tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "types": "bin/rough.d.ts",
-  "version": "4.1.4"
+  "version": "4.0.4"
 }

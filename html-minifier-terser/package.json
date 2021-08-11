@@ -1,31 +1,31 @@
 {
   "_args": [
     [
-      "html-minifier-terser@5.0.4",
+      "html-minifier-terser@5.0.3",
       "/home/pro/Solutions/drawboard-light"
     ]
   ],
-  "_from": "html-minifier-terser@5.0.4",
-  "_id": "html-minifier-terser@5.0.4",
+  "_from": "html-minifier-terser@5.0.3",
+  "_id": "html-minifier-terser@5.0.3",
   "_inBundle": false,
-  "_integrity": "sha512-fHwmKQ+GzhlqdxEtwrqLT7MSuheiA+rif5/dZgbz3GjoMXJzcRzy1L9NXoiiyxrnap+q5guSiv8Tz5lrh9g42g==",
+  "_integrity": "sha512-It4No3H1V3Dhd/O0MePFdo0oX/M6u6YZTMw4My/010mT6vxdbqge7+0RoxGAmeSbKok6gjYZoP0p4rpZ2+J2yw==",
   "_location": "/html-minifier-terser",
   "_phantomChildren": {},
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "html-minifier-terser@5.0.4",
+    "raw": "html-minifier-terser@5.0.3",
     "name": "html-minifier-terser",
     "escapedName": "html-minifier-terser",
-    "rawSpec": "5.0.4",
+    "rawSpec": "5.0.3",
     "saveSpec": null,
-    "fetchSpec": "5.0.4"
+    "fetchSpec": "5.0.3"
   },
   "_requiredBy": [
     "/html-webpack-plugin"
   ],
-  "_resolved": "https://registry.npmjs.org/html-minifier-terser/-/html-minifier-terser-5.0.4.tgz",
-  "_spec": "5.0.4",
+  "_resolved": "https://registry.npmjs.org/html-minifier-terser/-/html-minifier-terser-5.0.3.tgz",
+  "_spec": "5.0.3",
   "_where": "/home/pro/Solutions/drawboard-light",
   "author": {
     "name": "Daniel Ruf"
@@ -59,13 +59,13 @@
     }
   ],
   "dependencies": {
-    "camel-case": "^4.1.1",
-    "clean-css": "^4.2.3",
-    "commander": "^4.1.1",
+    "camel-case": "^3.0.0",
+    "clean-css": "^4.2.1",
+    "commander": "^4.0.0",
     "he": "^1.2.0",
-    "param-case": "^3.0.3",
+    "param-case": "^2.1.1",
     "relateurl": "^0.2.7",
-    "terser": "^4.6.3"
+    "terser": "^4.3.9"
   },
   "description": "Highly configurable, well-tested, JavaScript-based HTML minifier.",
   "devDependencies": {
@@ -132,5 +132,5 @@
     "dist": "grunt dist",
     "test": "grunt test"
   },
-  "version": "5.0.4"
+  "version": "5.0.3"
 }

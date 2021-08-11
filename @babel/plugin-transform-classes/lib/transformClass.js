@@ -15,8 +15,6 @@ var defineMap = _interopRequireWildcard(require("@babel/helper-define-map"));
 
 var _core = require("@babel/core");
 
-var _helperAnnotateAsPure = _interopRequireDefault(require("@babel/helper-annotate-as-pure"));
-
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
@@ -40,7 +38,6 @@ function transformClass(path, file, builtinClasses, isLoose) {
     file: undefined,
     classId: undefined,
     classRef: undefined,
-    superFnId: undefined,
     superName: undefined,
     superReturns: [],
     isDerived: false,
@@ -243,7 +240,7 @@ function transformClass(path, file, builtinClasses, isLoose) {
   }
 
   function wrapSuperCall(bareSuper, superRef, thisRef, body) {
-    const bareSuperNode = bareSuper.node;
+    let bareSuperNode = bareSuper.node;
     let call;
 
     if (classState.isLoose) {
@@ -260,7 +257,8 @@ function transformClass(path, file, builtinClasses, isLoose) {
 
       call = _core.types.logicalExpression("||", bareSuperNode, _core.types.thisExpression());
     } else {
-      call = (0, _helperOptimiseCallExpression.default)(_core.types.cloneNode(classState.superFnId), _core.types.thisExpression(), bareSuperNode.arguments);
+      bareSuperNode = (0, _helperOptimiseCallExpression.default)(_core.types.callExpression(classState.file.addHelper("getPrototypeOf"), [_core.types.cloneNode(classState.classRef)]), _core.types.thisExpression(), bareSuperNode.arguments);
+      call = _core.types.callExpression(classState.file.addHelper("possibleConstructorReturn"), [_core.types.thisExpression(), bareSuperNode]);
     }
 
     if (bareSuper.parentPath.isExpressionStatement() && bareSuper.parentPath.container === body.node.body && body.node.body.length - 1 === bareSuper.parentPath.key) {
@@ -463,12 +461,10 @@ function transformClass(path, file, builtinClasses, isLoose) {
 
   function pushInheritsToBody() {
     if (!classState.isDerived || classState.pushedInherits) return;
-    const superFnId = path.scope.generateUidIdentifier("super");
     setState({
-      pushedInherits: true,
-      superFnId
+      pushedInherits: true
     });
-    classState.body.unshift(_core.types.expressionStatement(_core.types.callExpression(classState.file.addHelper(classState.isLoose ? "inheritsLoose" : "inherits"), [_core.types.cloneNode(classState.classRef), _core.types.cloneNode(classState.superName)])), _core.types.variableDeclaration("var", [_core.types.variableDeclarator(superFnId, _core.types.callExpression(classState.file.addHelper("createSuper"), [_core.types.cloneNode(classState.classRef)]))]));
+    classState.body.unshift(_core.types.expressionStatement(_core.types.callExpression(classState.file.addHelper(classState.isLoose ? "inheritsLoose" : "inherits"), [_core.types.cloneNode(classState.classRef), _core.types.cloneNode(classState.superName)])));
   }
 
   function setupClosureParamsArgs() {
@@ -479,13 +475,7 @@ function transformClass(path, file, builtinClasses, isLoose) {
     const closureArgs = [];
 
     if (classState.isDerived) {
-      let arg = _core.types.cloneNode(superName);
-
-      if (classState.extendsNative) {
-        arg = _core.types.callExpression(classState.file.addHelper("wrapNativeSuper"), [arg]);
-        (0, _helperAnnotateAsPure.default)(arg);
-      }
-
+      const arg = classState.extendsNative ? _core.types.callExpression(classState.file.addHelper("wrapNativeSuper"), [_core.types.cloneNode(superName)]) : _core.types.cloneNode(superName);
       const param = classState.scope.generateUidIdentifierBasedOnNode(superName);
       closureParams.push(param);
       closureArgs.push(arg);
