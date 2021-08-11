@@ -15,7 +15,7 @@ var actSupported = reactAct !== undefined; // act is supported react-dom@16.8.0
 
 function actPolyfill(cb) {
   ReactDOM.unstable_batchedUpdates(cb);
-  ReactDOM.render(React.createElement("div", null), document.createElement('div'));
+  ReactDOM.render( /*#__PURE__*/React.createElement("div", null), document.createElement('div'));
 }
 
 var act = reactAct || actPolyfill;
@@ -126,6 +126,52 @@ function asyncAct(cb) {
   });
 }
 /* eslint no-console:0 */
+
+/* istanbul ignore file */
+// the part of this file that we need tested is definitely being run
+// and the part that is not cannot easily have useful tests written
+// anyway. So we're just going to ignore coverage for this file
+
+/**
+ * copied from React's enqueueTask.js
+ */
+var didWarnAboutMessageChannel = false;
+var enqueueTask;
+
+try {
+  // read require off the module object to get around the bundlers.
+  // we don't want them to detect a require and bundle a Node polyfill.
+  var requireString = ("require" + Math.random()).slice(0, 7);
+  var nodeRequire = module && module[requireString]; // assuming we're in node, let's try to get node's
+  // version of setImmediate, bypassing fake timers if any.
+
+  enqueueTask = nodeRequire('timers').setImmediate;
+} catch (_err) {
+  // we're in a browser
+  // we can't use regular timers because they may still be faked
+  // so we try MessageChannel+postMessage instead
+  enqueueTask = function (callback) {
+    var supportsMessageChannel = typeof MessageChannel === 'function';
+
+    if (supportsMessageChannel) {
+      var channel = new MessageChannel();
+      channel.port1.onmessage = callback;
+      channel.port2.postMessage(undefined);
+    } else if (didWarnAboutMessageChannel === false) {
+      didWarnAboutMessageChannel = true; // eslint-disable-next-line no-console
+
+      console.error('This browser does not have a MessageChannel implementation, ' + 'so enqueuing tasks via await act(async () => ...) will fail. ' + 'Please file an issue at https://github.com/facebook/react/issues ' + 'if you encounter this warning.');
+    }
+  };
+}
+
+function flushMicroTasks() {
+  return {
+    then: function then(resolve) {
+      enqueueTask(resolve);
+    }
+  };
+}
 
 configure({
   asyncWrapper: function () {
@@ -247,10 +293,32 @@ function render(ui, _temp) {
 }
 
 function cleanup() {
-  mountedContainers.forEach(cleanupAtContainer);
+  return _cleanup.apply(this, arguments);
 } // maybe one day we'll expose this (perhaps even as a utility returned by render).
 // but let's wait until someone asks for it.
 
+
+function _cleanup() {
+  _cleanup = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3() {
+    return _regeneratorRuntime.wrap(function (_context3) {
+      while (1) {
+        switch (_context3.prev = _context3.next) {
+          case 0:
+            _context3.next = 2;
+            return flushMicroTasks();
+
+          case 2:
+            mountedContainers.forEach(cleanupAtContainer);
+
+          case 3:
+          case "end":
+            return _context3.stop();
+        }
+      }
+    }, _callee3);
+  }));
+  return _cleanup.apply(this, arguments);
+}
 
 function cleanupAtContainer(container) {
   ReactDOM.unmountComponentAtNode(container);
@@ -263,8 +331,8 @@ function cleanupAtContainer(container) {
 } // react-testing-library's version of fireEvent will call
 // dom-testing-library's version of fireEvent wrapped inside
 // an "act" call so that after all event callbacks have been
-// been called, the resulting useEffect callbacks will also
-// be called.
+// called, the resulting useEffect callbacks will also be
+// called.
 
 
 function fireEvent() {

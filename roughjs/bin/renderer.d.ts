@@ -10,6 +10,7 @@ export declare function linearPath(points: Point[], close: boolean, o: ResolvedO
 export declare function polygon(points: Point[], o: ResolvedOptions): OpSet;
 export declare function rectangle(x: number, y: number, width: number, height: number, o: ResolvedOptions): OpSet;
 export declare function curve(points: Point[], o: ResolvedOptions): OpSet;
+export declare function curveAsBezierPoints(points: Point[], o: ResolvedOptions): Point[];
 export interface EllipseResult {
     opset: OpSet;
     estimatedPoints: Point[];

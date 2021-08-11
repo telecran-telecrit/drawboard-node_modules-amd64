@@ -22,7 +22,19 @@
     "fetchSpec": "1.10.0"
   },
   "_requiredBy": [
+    "/@sentry/browser",
+    "/@sentry/core",
+    "/@sentry/hub",
+    "/@sentry/integrations",
+    "/@sentry/minimal",
+    "/@sentry/utils",
+    "/camel-case",
     "/chrome-trace-event",
+    "/dot-case",
+    "/lower-case",
+    "/no-case",
+    "/param-case",
+    "/pascal-case",
     "/rxjs",
     "/tsutils"
   ],

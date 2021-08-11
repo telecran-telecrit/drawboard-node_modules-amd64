@@ -22,6 +22,7 @@
     "fetchSpec": "3.1.0"
   },
   "_requiredBy": [
+    "/browserslist",
     "/react-dev-utils"
   ],
   "_resolved": "https://registry.npmjs.org/pkg-up/-/pkg-up-3.1.0.tgz",

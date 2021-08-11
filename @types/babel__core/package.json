@@ -1,32 +1,32 @@
 {
   "_args": [
     [
-      "@types/babel__core@7.1.4",
+      "@types/babel__core@7.1.6",
       "/home/pro/Solutions/drawboard-light"
     ]
   ],
-  "_from": "@types/babel__core@7.1.4",
-  "_id": "@types/babel__core@7.1.4",
+  "_from": "@types/babel__core@7.1.6",
+  "_id": "@types/babel__core@7.1.6",
   "_inBundle": false,
-  "_integrity": "sha512-c/5MuRz5HM4aizqL5ViYfW4iEnmfPcfbH4Xa6GgLT21dMc1NGeNnuS6egHheOmP+kCJ9CAzC4pv4SDCWTnRkbg==",
+  "_integrity": "sha512-tTnhWszAqvXnhW7m5jQU9PomXSiKXk2sFxpahXvI20SZKu9ylPi8WtIxueZ6ehDWikPT0jeFujMj3X4ZHuf3Tg==",
   "_location": "/@types/babel__core",
   "_phantomChildren": {},
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "@types/babel__core@7.1.4",
+    "raw": "@types/babel__core@7.1.6",
     "name": "@types/babel__core",
     "escapedName": "@types%2fbabel__core",
     "scope": "@types",
-    "rawSpec": "7.1.4",
+    "rawSpec": "7.1.6",
     "saveSpec": null,
-    "fetchSpec": "7.1.4"
+    "fetchSpec": "7.1.6"
   },
   "_requiredBy": [
     "/babel-jest"
   ],
-  "_resolved": "https://registry.npmjs.org/@types/babel__core/-/babel__core-7.1.4.tgz",
-  "_spec": "7.1.4",
+  "_resolved": "https://registry.npmjs.org/@types/babel__core/-/babel__core-7.1.6.tgz",
+  "_spec": "7.1.6",
   "_where": "/home/pro/Solutions/drawboard-light",
   "bugs": {
     "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/issues"
@@ -67,8 +67,8 @@
     "directory": "types/babel__core"
   },
   "scripts": {},
-  "typeScriptVersion": "2.9",
+  "typeScriptVersion": "3.4",
   "types": "index.d.ts",
-  "typesPublisherContentHash": "571574423c1dc97a75fb9a37066b907800173dbdc95d0c84b77b092651890943",
-  "version": "7.1.4"
+  "typesPublisherContentHash": "894ec56123a8d17360888ae06a5b3aef80419218f588ec4750f4690f67de012d",
+  "version": "7.1.6"
 }

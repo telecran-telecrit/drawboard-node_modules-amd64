@@ -11,8 +11,10 @@
   "_integrity": "sha512-K1N5xUjj7v0l2j/3Sgs5b8CjrrgtC70SmdCuZiJ8tSyb5J+uk3FoeZ4b7yTnH6j7ngI+Bc5bldHJIa8hYdu2gQ==",
   "_location": "/resolve-url-loader",
   "_phantomChildren": {
+    "big.js": "5.2.2",
     "chalk": "2.4.2",
-    "has-flag": "3.0.0"
+    "has-flag": "3.0.0",
+    "minimist": "1.2.5"
   },
   "_requested": {
     "type": "version",

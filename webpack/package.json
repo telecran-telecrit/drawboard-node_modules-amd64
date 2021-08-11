@@ -1,14 +1,14 @@
 {
   "_args": [
     [
-      "webpack@4.41.5",
+      "webpack@4.42.0",
       "/home/pro/Solutions/drawboard-light"
     ]
   ],
-  "_from": "webpack@4.41.5",
-  "_id": "webpack@4.41.5",
+  "_from": "webpack@4.42.0",
+  "_id": "webpack@4.42.0",
   "_inBundle": false,
-  "_integrity": "sha512-wp0Co4vpyumnp3KlkmpM5LWuzvZYayDwM2n17EHFr4qxBBbRokC7DJawPJC7TfSFZ9HZ6GsdH40EBj4UV0nmpw==",
+  "_integrity": "sha512-EzJRHvwQyBiYrYqhyjW9AqM90dE4+s1/XtCfn7uWg6cS72zH+2VPFAlsnW0+W0cDi0XRjNKUMoJtpSi50+Ph6w==",
   "_location": "/webpack",
   "_phantomChildren": {
     "ajv": "6.11.0",
@@ -31,7 +31,7 @@
     "promise-inflight": "1.0.1",
     "rimraf": "2.6.3",
     "serialize-javascript": "2.1.2",
-    "terser": "4.6.3",
+    "terser": "4.6.7",
     "unique-filename": "1.1.1",
     "webpack-sources": "1.4.3",
     "worker-farm": "1.7.0",
@@ -40,18 +40,18 @@
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "webpack@4.41.5",
+    "raw": "webpack@4.42.0",
     "name": "webpack",
     "escapedName": "webpack",
-    "rawSpec": "4.41.5",
+    "rawSpec": "4.42.0",
     "saveSpec": null,
-    "fetchSpec": "4.41.5"
+    "fetchSpec": "4.42.0"
   },
   "_requiredBy": [
     "/react-scripts"
   ],
-  "_resolved": "https://registry.npmjs.org/webpack/-/webpack-4.41.5.tgz",
-  "_spec": "4.41.5",
+  "_resolved": "https://registry.npmjs.org/webpack/-/webpack-4.42.0.tgz",
+  "_spec": "4.42.0",
   "_where": "/home/pro/Solutions/drawboard-light",
   "author": {
     "name": "Tobias Koppers @sokra"
@@ -258,6 +258,6 @@
     "travis:lintunit": "yarn lint && yarn cover:unit --ci $JEST",
     "type-lint": "tsc --pretty"
   },
-  "version": "4.41.5",
+  "version": "4.42.0",
   "web": "lib/webpack.web.js"
 }

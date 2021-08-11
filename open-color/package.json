@@ -1,0 +1,82 @@
+{
+  "_args": [
+    [
+      "open-color@1.7.0",
+      "/home/pro/Solutions/drawboard-light"
+    ]
+  ],
+  "_from": "open-color@1.7.0",
+  "_id": "open-color@1.7.0",
+  "_inBundle": false,
+  "_integrity": "sha512-Kyl74V5gohYxajOVgIaXhvhjKtXfhwl7ddJ28HVXDkPuM8PVdaWbFPucf6qPGW6aXOMxnukw0/R1lLLyXKEffA==",
+  "_location": "/open-color",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "open-color@1.7.0",
+    "name": "open-color",
+    "escapedName": "open-color",
+    "rawSpec": "1.7.0",
+    "saveSpec": null,
+    "fetchSpec": "1.7.0"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/open-color/-/open-color-1.7.0.tgz",
+  "_spec": "1.7.0",
+  "_where": "/home/pro/Solutions/drawboard-light",
+  "author": {
+    "name": "Jeong Heeyeun",
+    "email": "heeyeun.design@gmail.com"
+  },
+  "bugs": {
+    "url": "https://github.com/yeun/open-color/issues"
+  },
+  "dependencies": {
+    "lodash": "^4.17.11",
+    "npm": "^6.9.0"
+  },
+  "description": "Open color scheme for web UI",
+  "devDependencies": {
+    "archiver": "^1.3.0",
+    "ase-utils": "^0.1.1",
+    "handlebars": "^4.1.2",
+    "typescript": "^2.9.2",
+    "uuid": "^3.3.2"
+  },
+  "files": [
+    "open-color.json",
+    "open-color.css",
+    "open-color.scss",
+    "open-color.less",
+    "open-color.styl",
+    "open-color.d.ts"
+  ],
+  "homepage": "https://github.com/yeun/open-color",
+  "keywords": [
+    "color",
+    "colorscheme",
+    "color swatches",
+    "SCSS",
+    "Less",
+    "Stylus",
+    "CSS"
+  ],
+  "license": "MIT",
+  "main": "open-color.json",
+  "name": "open-color",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yeun/open-color.git"
+  },
+  "scripts": {
+    "compile-templates": "node compile-templates.js",
+    "prepublish": "npm run compile-templates",
+    "test": "npm run test-typescript",
+    "test-typescript": "tsc open-color.d.ts tests/typescript.ts --noEmit"
+  },
+  "types": "./open-color.d.ts",
+  "version": "1.7.0"
+}

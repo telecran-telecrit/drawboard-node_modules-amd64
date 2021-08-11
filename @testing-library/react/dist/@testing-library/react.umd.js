@@ -4,8 +4,8 @@
 	(global = global || self, factory(global.TestingLibraryReact = {}, global.React, global.ReactDom, global.testUtils));
 }(this, (function (exports, React, ReactDOM, testUtils) { 'use strict';
 
-	React = React && React.hasOwnProperty('default') ? React['default'] : React;
-	ReactDOM = ReactDOM && ReactDOM.hasOwnProperty('default') ? ReactDOM['default'] : ReactDOM;
+	React = React && Object.prototype.hasOwnProperty.call(React, 'default') ? React['default'] : React;
+	ReactDOM = ReactDOM && Object.prototype.hasOwnProperty.call(ReactDOM, 'default') ? ReactDOM['default'] : ReactDOM;
 
 	var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -150,7 +150,7 @@
 	      };
 	    };
 
-	    function AsyncIterator(generator) {
+	    function AsyncIterator(generator, PromiseImpl) {
 	      function invoke(method, arg, resolve, reject) {
 	        var record = tryCatch(generator[method], generator, arg);
 
@@ -161,14 +161,14 @@
 	          var value = result.value;
 
 	          if (value && typeof value === "object" && hasOwn.call(value, "__await")) {
-	            return Promise.resolve(value.__await).then(function (value) {
+	            return PromiseImpl.resolve(value.__await).then(function (value) {
 	              invoke("next", value, resolve, reject);
 	            }, function (err) {
 	              invoke("throw", err, resolve, reject);
 	            });
 	          }
 
-	          return Promise.resolve(value).then(function (unwrapped) {
+	          return PromiseImpl.resolve(value).then(function (unwrapped) {
 	            // When a yielded Promise is resolved, its final value becomes
 	            // the .value of the Promise<{value,done}> result for the
 	            // current iteration.
@@ -186,7 +186,7 @@
 
 	      function enqueue(method, arg) {
 	        function callInvokeWithMethodAndArg() {
-	          return new Promise(function (resolve, reject) {
+	          return new PromiseImpl(function (resolve, reject) {
 	            invoke(method, arg, resolve, reject);
 	          });
 	        }
@@ -223,8 +223,9 @@
 	    // AsyncIterator objects; they just return a Promise for the value of
 	    // the final result produced by the iterator.
 
-	    exports.async = function (innerFn, outerFn, self, tryLocsList) {
-	      var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList));
+	    exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) {
+	      if (PromiseImpl === void 0) PromiseImpl = Promise;
+	      var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl);
 	      return exports.isGeneratorFunction(outerFn) ? iter // If outerFn is a generator, return the full iterator.
 	      : iter.next().then(function (result) {
 	        return result.done ? result.value : iter.next();
@@ -761,52 +762,6 @@
 	  };
 	}
 
-	/* istanbul ignore file */
-	// the part of this file that we need tested is definitely being run
-	// and the part that is not cannot easily have useful tests written
-	// anyway. So we're just going to ignore coverage for this file
-
-	/**
-	 * copied from React's enqueueTask.js
-	 */
-	var didWarnAboutMessageChannel = false;
-	var enqueueTask;
-
-	try {
-	  // read require off the module object to get around the bundlers.
-	  // we don't want them to detect a require and bundle a Node polyfill.
-	  var requireString = ("require" + Math.random()).slice(0, 7);
-	  var nodeRequire = module && module[requireString]; // assuming we're in node, let's try to get node's
-	  // version of setImmediate, bypassing fake timers if any.
-
-	  enqueueTask = nodeRequire('timers').setImmediate;
-	} catch (_err) {
-	  // we're in a browser
-	  // we can't use regular timers because they may still be faked
-	  // so we try MessageChannel+postMessage instead
-	  enqueueTask = function (callback) {
-	    var supportsMessageChannel = typeof MessageChannel === 'function';
-
-	    if (supportsMessageChannel) {
-	      var channel = new MessageChannel();
-	      channel.port1.onmessage = callback;
-	      channel.port2.postMessage(undefined);
-	    } else if (didWarnAboutMessageChannel === false) {
-	      didWarnAboutMessageChannel = true; // eslint-disable-next-line no-console
-
-	      console.error('This browser does not have a MessageChannel implementation, ' + 'so enqueuing tasks via await act(async () => ...) will fail. ' + 'Please file an issue at https://github.com/facebook/react/issues ' + 'if you encounter this warning.');
-	    }
-	  };
-	}
-
-	function flushMicroTasks() {
-	  return {
-	    then: function then(resolve) {
-	      enqueueTask(resolve);
-	    }
-	  };
-	}
-
 	function _extends() {
 	  _extends = Object.assign || function (target) {
 	    for (var i = 1; i < arguments.length; i++) {
@@ -825,17 +780,17 @@
 	  return _extends.apply(this, arguments);
 	}
 
-	function _inheritsLoose(subClass, superClass) {
-	  subClass.prototype = Object.create(superClass.prototype);
-	  subClass.prototype.constructor = subClass;
-	  subClass.__proto__ = superClass;
-	}
-
 	function _getPrototypeOf(o) {
 	  _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function (o) {
 	    return o.__proto__ || Object.getPrototypeOf(o);
 	  };
 	  return _getPrototypeOf(o);
+	}
+
+	function _inheritsLoose(subClass, superClass) {
+	  subClass.prototype = Object.create(superClass.prototype);
+	  subClass.prototype.constructor = subClass;
+	  subClass.__proto__ = superClass;
 	}
 
 	function _setPrototypeOf(o, p) {
@@ -851,7 +806,7 @@
 	  return Function.toString.call(fn).indexOf("[native code]") !== -1;
 	}
 
-	function isNativeReflectConstruct() {
+	function _isNativeReflectConstruct() {
 	  if (typeof Reflect === "undefined" || !Reflect.construct) return false;
 	  if (Reflect.construct.sham) return false;
 	  if (typeof Proxy === "function") return true;
@@ -865,7 +820,7 @@
 	}
 
 	function _construct() {
-	  if (isNativeReflectConstruct()) {
+	  if (_isNativeReflectConstruct()) {
 	    _construct = Reflect.construct;
 	  } else {
 	    _construct = function (Parent, args, Class) {
@@ -2702,10 +2657,9 @@
 	  }
 
 	  var OBJECT_NAMES = ['DOMStringMap', 'NamedNodeMap'];
-	  var ARRAY_REGEXP = /^(HTML\w*Collection|NodeList)$/;
 
 	  var testName = function (name) {
-	    return OBJECT_NAMES.indexOf(name) !== -1 || ARRAY_REGEXP.test(name);
+	    return OBJECT_NAMES.indexOf(name) !== -1 || /^(HTML\w*Collection|NodeList)$/.test(name);
 	  };
 
 	  var test = function (val) {
@@ -2856,10 +2810,9 @@
 	  var TEXT_NODE = 3;
 	  var COMMENT_NODE = 8;
 	  var FRAGMENT_NODE = 11;
-	  var ELEMENT_REGEXP = /^((HTML|SVG)\w*)?Element$/;
 
 	  var testNode = function (nodeType, name) {
-	    return nodeType === 1 && ELEMENT_REGEXP.test(name) || nodeType === TEXT_NODE && name === 'Text' || nodeType === COMMENT_NODE && name === 'Comment' || nodeType === FRAGMENT_NODE && name === 'DocumentFragment';
+	    return nodeType === 1 && /^((HTML|SVG)\w*)?Element$/.test(name) || nodeType === TEXT_NODE && name === 'Text' || nodeType === COMMENT_NODE && name === 'Comment' || nodeType === FRAGMENT_NODE && name === 'DocumentFragment';
 	  };
 
 	  var test = function (val) {
@@ -3475,9 +3428,6 @@
 	    return typeof window !== 'undefined' && val === window;
 	  };
 
-	  var SYMBOL_REGEXP = /^Symbol\((.*)\)(.*)$/;
-	  var NEWLINE_REGEXP = /\n/gi;
-
 	  var PrettyFormatPluginError = /*#__PURE__*/function (_Error) {
 	    _inheritsLoose(PrettyFormatPluginError, _Error);
 
@@ -3513,7 +3463,7 @@
 	  }
 
 	  function printSymbol(val) {
-	    return String(val).replace(SYMBOL_REGEXP, 'Symbol($1)');
+	    return String(val).replace(/^Symbol\((.*)\)(.*)$/, 'Symbol($1)');
 	  }
 
 	  function printError(val) {
@@ -3660,7 +3610,7 @@
 	        return printer(valChild, config, indentation, depth, refs);
 	      }, function (str) {
 	        var indentationNext = indentation + config.indent;
-	        return indentationNext + str.replace(NEWLINE_REGEXP, '\n' + indentationNext);
+	        return indentationNext + str.replace(/\n/gi, '\n' + indentationNext);
 	      }, {
 	        edgeSpacing: config.spacingOuter,
 	        min: config.min,
@@ -3849,686 +3799,6 @@
 	  module.exports = prettyFormat;
 	});
 	var prettyFormat = unwrapExports(build);
-
-	/*!
-	 * Shim for MutationObserver interface
-	 * Author: Graeme Yeates (github.com/megawac)
-	 * Repository: https://github.com/megawac/MutationObserver.js
-	 * License: WTFPL V2, 2004 (wtfpl.net).
-	 * Though credit and staring the repo will make me feel pretty, you can modify and redistribute as you please.
-	 * Attempts to follow spec (https://www.w3.org/TR/dom/#mutation-observers) as closely as possible for native javascript
-	 * See https://github.com/WebKit/webkit/blob/master/Source/WebCore/dom/MutationObserver.cpp for current webkit source c++ implementation
-	 */
-
-	/**
-	 * prefix bugs:
-	    - https://bugs.webkit.org/show_bug.cgi?id=85161
-	    - https://bugzilla.mozilla.org/show_bug.cgi?id=749920
-	 * Don't use WebKitMutationObserver as Safari (6.0.5-6.1) use a buggy implementation
-	*/
-	var MutationObserver = function (undefined$1) {
-	  if (typeof window !== 'undefined' && typeof window.MutationObserver !== 'undefined') {
-	    return window.MutationObserver;
-	  }
-	  /**
-	   * @param {function(Array.<MutationRecord>, MutationObserver)} listener
-	   * @constructor
-	   */
-
-
-	  function MutationObserver(listener) {
-	    /**
-	     * @type {Array.<Object>}
-	     * @private
-	     */
-	    this._watched = [];
-	    /** @private */
-
-	    this._listener = listener;
-	  }
-	  /**
-	   * Start a recursive timeout function to check all items being observed for mutations
-	   * @type {MutationObserver} observer
-	   * @private
-	   */
-
-
-	  function startMutationChecker(observer) {
-	    (function check() {
-	      var mutations = observer.takeRecords();
-
-	      if (mutations.length) {
-	        // fire away
-	        // calling the listener with context is not spec but currently consistent with FF and WebKit
-	        observer._listener(mutations, observer);
-	      }
-	      /** @private */
-
-
-	      observer._timeout = setTimeout(check, MutationObserver._period);
-	    })();
-	  }
-	  /**
-	   * Period to check for mutations (~32 times/sec)
-	   * @type {number}
-	   * @expose
-	   */
-
-
-	  MutationObserver._period = 30
-	  /*ms+runtime*/
-	  ;
-	  /**
-	   * Exposed API
-	   * @expose
-	   * @final
-	   */
-
-	  MutationObserver.prototype = {
-	    /**
-	     * see https://dom.spec.whatwg.org/#dom-mutationobserver-observe
-	     * not going to throw here but going to follow the current spec config sets
-	     * @param {Node|null} $target
-	     * @param {Object|null} config : MutationObserverInit configuration dictionary
-	     * @expose
-	     * @return undefined
-	     */
-	    observe: function observe($target, config) {
-	      /**
-	       * Using slightly different names so closure can go ham
-	       * @type {!Object} : A custom mutation config
-	       */
-	      var settings = {
-	        attr: !!(config.attributes || config.attributeFilter || config.attributeOldValue),
-	        // some browsers enforce that subtree must be set with childList, attributes or characterData.
-	        // We don't care as spec doesn't specify this rule.
-	        kids: !!config.childList,
-	        descendents: !!config.subtree,
-	        charData: !!(config.characterData || config.characterDataOldValue)
-	      };
-	      var watched = this._watched; // remove already observed target element from pool
-
-	      for (var i = 0; i < watched.length; i++) {
-	        if (watched[i].tar === $target) watched.splice(i, 1);
-	      }
-
-	      if (config.attributeFilter) {
-	        /**
-	         * converts to a {key: true} dict for faster lookup
-	         * @type {Object.<String,Boolean>}
-	         */
-	        settings.afilter = reduce(config.attributeFilter, function (a, b) {
-	          a[b] = true;
-	          return a;
-	        }, {});
-	      }
-
-	      watched.push({
-	        tar: $target,
-	        fn: createMutationSearcher($target, settings)
-	      }); // reconnect if not connected
-
-	      if (!this._timeout) {
-	        startMutationChecker(this);
-	      }
-	    },
-
-	    /**
-	     * Finds mutations since last check and empties the "record queue" i.e. mutations will only be found once
-	     * @expose
-	     * @return {Array.<MutationRecord>}
-	     */
-	    takeRecords: function takeRecords() {
-	      var mutations = [];
-	      var watched = this._watched;
-
-	      for (var i = 0; i < watched.length; i++) {
-	        watched[i].fn(mutations);
-	      }
-
-	      return mutations;
-	    },
-
-	    /**
-	     * @expose
-	     * @return undefined
-	     */
-	    disconnect: function disconnect() {
-	      this._watched = []; // clear the stuff being observed
-
-	      clearTimeout(this._timeout); // ready for garbage collection
-
-	      /** @private */
-
-	      this._timeout = null;
-	    }
-	  };
-	  /**
-	   * Simple MutationRecord pseudoclass. No longer exposing as its not fully compliant
-	   * @param {Object} data
-	   * @return {Object} a MutationRecord
-	   */
-
-	  function MutationRecord(data) {
-	    var settings = {
-	      // technically these should be on proto so hasOwnProperty will return false for non explicitly props
-	      type: null,
-	      target: null,
-	      addedNodes: [],
-	      removedNodes: [],
-	      previousSibling: null,
-	      nextSibling: null,
-	      attributeName: null,
-	      attributeNamespace: null,
-	      oldValue: null
-	    };
-
-	    for (var prop in data) {
-	      if (has(settings, prop) && data[prop] !== undefined$1) settings[prop] = data[prop];
-	    }
-
-	    return settings;
-	  }
-	  /**
-	   * Creates a func to find all the mutations
-	   *
-	   * @param {Node} $target
-	   * @param {!Object} config : A custom mutation config
-	   */
-
-
-	  function createMutationSearcher($target, config) {
-	    /** type {Elestuct} */
-	    var $oldstate = clone($target, config); // create the cloned datastructure
-
-	    /**
-	     * consumes array of mutations we can push to
-	     *
-	     * @param {Array.<MutationRecord>} mutations
-	     */
-
-	    return function (mutations) {
-	      var olen = mutations.length,
-	          dirty;
-
-	      if (config.charData && $target.nodeType === 3 && $target.nodeValue !== $oldstate.charData) {
-	        mutations.push(new MutationRecord({
-	          type: "characterData",
-	          target: $target,
-	          oldValue: $oldstate.charData
-	        }));
-	      } // Alright we check base level changes in attributes... easy
-
-
-	      if (config.attr && $oldstate.attr) {
-	        findAttributeMutations(mutations, $target, $oldstate.attr, config.afilter);
-	      } // check childlist or subtree for mutations
-
-
-	      if (config.kids || config.descendents) {
-	        dirty = searchSubtree(mutations, $target, $oldstate, config);
-	      } // reclone data structure if theres changes
-
-
-	      if (dirty || mutations.length !== olen) {
-	        /** type {Elestuct} */
-	        $oldstate = clone($target, config);
-	      }
-	    };
-	  }
-	  /* attributes + attributeFilter helpers */
-	  // Check if the environment has the attribute bug (#4) which cause
-	  // element.attributes.style to always be null.
-
-
-	  var hasAttributeBug = false;
-
-	  if (typeof document !== 'undefined') {
-	    var testElement = document.createElement('i');
-	    testElement.style.top = 0;
-	    hasAttributeBug = testElement.attributes.style.value != 'null';
-	  }
-	  /**
-	   * Gets an attribute value in an environment without attribute bug
-	   *
-	   * @param {Node} el
-	   * @param {Attr} attr
-	   * @return {String} an attribute value
-	   */
-
-
-	  var getAttributeValue = hasAttributeBug ? function (el, attr) {
-	    // There is a potential for a warning to occur here if the attribute is a
-	    // custom attribute in IE<9 with a custom .toString() method. This is
-	    // just a warning and doesn't affect execution (see #21)
-	    return attr.value;
-	  }
-	  /**
-	   * Gets an attribute value with special hack for style attribute (see #4)
-	   *
-	   * @param {Node} el
-	   * @param {Attr} attr
-	   * @return {String} an attribute value
-	   */
-	  : function (el, attr) {
-	    // As with getAttributeSimple there is a potential warning for custom attribtues in IE7.
-	    return attr.name !== "style" ? attr.value : el.style.cssText;
-	  };
-	  /**
-	   * fast helper to check to see if attributes object of an element has changed
-	   * doesnt handle the textnode case
-	   *
-	   * @param {Array.<MutationRecord>} mutations
-	   * @param {Node} $target
-	   * @param {Object.<string, string>} $oldstate : Custom attribute clone data structure from clone
-	   * @param {Object} filter
-	   */
-
-	  function findAttributeMutations(mutations, $target, $oldstate, filter) {
-	    var checked = {};
-	    var attributes = $target.attributes;
-	    var attr;
-	    var i = attributes.length;
-
-	    while (i--) {
-	      attr = attributes[i];
-	      name = attr.name;
-
-	      if (!filter || has(filter, name)) {
-	        if (getAttributeValue($target, attr) !== $oldstate[name]) {
-	          // The pushing is redundant but gzips very nicely
-	          mutations.push(MutationRecord({
-	            type: "attributes",
-	            target: $target,
-	            attributeName: name,
-	            oldValue: $oldstate[name],
-	            attributeNamespace: attr.namespaceURI // in ie<8 it incorrectly will return undefined
-
-	          }));
-	        }
-
-	        checked[name] = true;
-	      }
-	    }
-
-	    for (var name in $oldstate) {
-	      if (!checked[name]) {
-	        mutations.push(MutationRecord({
-	          target: $target,
-	          type: "attributes",
-	          attributeName: name,
-	          oldValue: $oldstate[name]
-	        }));
-	      }
-	    }
-	  }
-	  /**
-	   * searchSubtree: array of mutations so far, element, element clone, bool
-	   * synchronous dfs comparision of two nodes
-	   * This function is applied to any observed element with childList or subtree specified
-	   * Sorry this is kind of confusing as shit, tried to comment it a bit...
-	   * codereview.stackexchange.com/questions/38351 discussion of an earlier version of this func
-	   *
-	   * @param {Array} mutations
-	   * @param {Node} $target
-	   * @param {!Object} $oldstate : A custom cloned node from clone()
-	   * @param {!Object} config : A custom mutation config
-	   */
-
-
-	  function searchSubtree(mutations, $target, $oldstate, config) {
-	    // Track if the tree is dirty and has to be recomputed (#14).
-	    var dirty;
-	    /*
-	     * Helper to identify node rearrangment and stuff...
-	     * There is no gaurentee that the same node will be identified for both added and removed nodes
-	     * if the positions have been shuffled.
-	     * conflicts array will be emptied by end of operation
-	     */
-
-	    function resolveConflicts(conflicts, node, $kids, $oldkids, numAddedNodes) {
-	      // the distance between the first conflicting node and the last
-	      var distance = conflicts.length - 1; // prevents same conflict being resolved twice consider when two nodes switch places.
-	      // only one should be given a mutation event (note -~ is used as a math.ceil shorthand)
-
-	      var counter = -~((distance - numAddedNodes) / 2);
-	      var $cur;
-	      var oldstruct;
-	      var conflict;
-
-	      while (conflict = conflicts.pop()) {
-	        $cur = $kids[conflict.i];
-	        oldstruct = $oldkids[conflict.j]; // attempt to determine if there was node rearrangement... won't gaurentee all matches
-	        // also handles case where added/removed nodes cause nodes to be identified as conflicts
-
-	        if (config.kids && counter && Math.abs(conflict.i - conflict.j) >= distance) {
-	          mutations.push(MutationRecord({
-	            type: "childList",
-	            target: node,
-	            addedNodes: [$cur],
-	            removedNodes: [$cur],
-	            // haha don't rely on this please
-	            nextSibling: $cur.nextSibling,
-	            previousSibling: $cur.previousSibling
-	          }));
-	          counter--; // found conflict
-	        } // Alright we found the resorted nodes now check for other types of mutations
-
-
-	        if (config.attr && oldstruct.attr) findAttributeMutations(mutations, $cur, oldstruct.attr, config.afilter);
-
-	        if (config.charData && $cur.nodeType === 3 && $cur.nodeValue !== oldstruct.charData) {
-	          mutations.push(MutationRecord({
-	            type: "characterData",
-	            target: $cur,
-	            oldValue: oldstruct.charData
-	          }));
-	        } // now look @ subtree
-
-
-	        if (config.descendents) findMutations($cur, oldstruct);
-	      }
-	    }
-	    /**
-	     * Main worker. Finds and adds mutations if there are any
-	     * @param {Node} node
-	     * @param {!Object} old : A cloned data structure using internal clone
-	     */
-
-
-	    function findMutations(node, old) {
-	      var $kids = node.childNodes;
-	      var $oldkids = old.kids;
-	      var klen = $kids.length; // $oldkids will be undefined for text and comment nodes
-
-	      var olen = $oldkids ? $oldkids.length : 0; // if (!olen && !klen) return; // both empty; clearly no changes
-	      // we delay the intialization of these for marginal performance in the expected case (actually quite signficant on large subtrees when these would be otherwise unused)
-	      // map of checked element of ids to prevent registering the same conflict twice
-
-	      var map; // array of potential conflicts (ie nodes that may have been re arranged)
-
-	      var conflicts;
-	      var id; // element id from getElementId helper
-
-	      var idx; // index of a moved or inserted element
-
-	      var oldstruct; // current and old nodes
-
-	      var $cur;
-	      var $old; // track the number of added nodes so we can resolve conflicts more accurately
-
-	      var numAddedNodes = 0; // iterate over both old and current child nodes at the same time
-
-	      var i = 0,
-	          j = 0; // while there is still anything left in $kids or $oldkids (same as i < $kids.length || j < $oldkids.length;)
-
-	      while (i < klen || j < olen) {
-	        // current and old nodes at the indexs
-	        $cur = $kids[i];
-	        oldstruct = $oldkids[j];
-	        $old = oldstruct && oldstruct.node;
-
-	        if ($cur === $old) {
-	          // expected case - optimized for this case
-	          // check attributes as specified by config
-	          if (config.attr && oldstruct.attr)
-	            /* oldstruct.attr instead of textnode check */
-	            findAttributeMutations(mutations, $cur, oldstruct.attr, config.afilter); // check character data if node is a comment or textNode and it's being observed
-
-	          if (config.charData && oldstruct.charData !== undefined$1 && $cur.nodeValue !== oldstruct.charData) {
-	            mutations.push(MutationRecord({
-	              type: "characterData",
-	              target: $cur,
-	              oldValue: oldstruct.charData
-	            }));
-	          } // resolve conflicts; it will be undefined if there are no conflicts - otherwise an array
-
-
-	          if (conflicts) resolveConflicts(conflicts, node, $kids, $oldkids, numAddedNodes); // recurse on next level of children. Avoids the recursive call when there are no children left to iterate
-
-	          if (config.descendents && ($cur.childNodes.length || oldstruct.kids && oldstruct.kids.length)) findMutations($cur, oldstruct);
-	          i++;
-	          j++;
-	        } else {
-	          // (uncommon case) lookahead until they are the same again or the end of children
-	          dirty = true;
-
-	          if (!map) {
-	            // delayed initalization (big perf benefit)
-	            map = {};
-	            conflicts = [];
-	          }
-
-	          if ($cur) {
-	            // check id is in the location map otherwise do a indexOf search
-	            if (!map[id = getElementId($cur)]) {
-	              // to prevent double checking
-	              // mark id as found
-	              map[id] = true; // custom indexOf using comparitor checking oldkids[i].node === $cur
-
-	              if ((idx = indexOfCustomNode($oldkids, $cur, j)) === -1) {
-	                if (config.kids) {
-	                  mutations.push(MutationRecord({
-	                    type: "childList",
-	                    target: node,
-	                    addedNodes: [$cur],
-	                    // $cur is a new node
-	                    nextSibling: $cur.nextSibling,
-	                    previousSibling: $cur.previousSibling
-	                  }));
-	                  numAddedNodes++;
-	                }
-	              } else {
-	                conflicts.push({
-	                  // add conflict
-	                  i: i,
-	                  j: idx
-	                });
-	              }
-	            }
-
-	            i++;
-	          }
-
-	          if ($old && // special case: the changes may have been resolved: i and j appear congurent so we can continue using the expected case
-	          $old !== $kids[i]) {
-	            if (!map[id = getElementId($old)]) {
-	              map[id] = true;
-
-	              if ((idx = indexOf($kids, $old, i)) === -1) {
-	                if (config.kids) {
-	                  mutations.push(MutationRecord({
-	                    type: "childList",
-	                    target: old.node,
-	                    removedNodes: [$old],
-	                    nextSibling: $oldkids[j + 1],
-	                    // praise no indexoutofbounds exception
-	                    previousSibling: $oldkids[j - 1]
-	                  }));
-	                  numAddedNodes--;
-	                }
-	              } else {
-	                conflicts.push({
-	                  i: idx,
-	                  j: j
-	                });
-	              }
-	            }
-
-	            j++;
-	          }
-	        } // end uncommon case
-
-	      } // end loop
-	      // resolve any remaining conflicts
-
-
-	      if (conflicts) resolveConflicts(conflicts, node, $kids, $oldkids, numAddedNodes);
-	    }
-
-	    findMutations($target, $oldstate);
-	    return dirty;
-	  }
-	  /**
-	   * Utility
-	   * Cones a element into a custom data structure designed for comparision. https://gist.github.com/megawac/8201012
-	   *
-	   * @param {Node} $target
-	   * @param {!Object} config : A custom mutation config
-	   * @return {!Object} : Cloned data structure
-	   */
-
-
-	  function clone($target, config) {
-	    var recurse = true; // set true so childList we'll always check the first level
-
-	    return function copy($target) {
-	      var elestruct = {
-	        /** @type {Node} */
-	        node: $target
-	      }; // Store current character data of target text or comment node if the config requests
-	      // those properties to be observed.
-
-	      if (config.charData && ($target.nodeType === 3 || $target.nodeType === 8)) {
-	        elestruct.charData = $target.nodeValue;
-	      } // its either a element, comment, doc frag or document node
-	      else {
-	          // Add attr only if subtree is specified or top level and avoid if
-	          // attributes is a document object (#13).
-	          if (config.attr && recurse && $target.nodeType === 1) {
-	            /**
-	             * clone live attribute list to an object structure {name: val}
-	             * @type {Object.<string, string>}
-	             */
-	            elestruct.attr = reduce($target.attributes, function (memo, attr) {
-	              if (!config.afilter || config.afilter[attr.name]) {
-	                memo[attr.name] = getAttributeValue($target, attr);
-	              }
-
-	              return memo;
-	            }, {});
-	          } // whether we should iterate the children of $target node
-
-
-	          if (recurse && (config.kids || config.charData || config.attr && config.descendents)) {
-	            /** @type {Array.<!Object>} : Array of custom clone */
-	            elestruct.kids = map($target.childNodes, copy);
-	          }
-
-	          recurse = config.descendents;
-	        }
-
-	      return elestruct;
-	    }($target);
-	  }
-	  /**
-	   * indexOf an element in a collection of custom nodes
-	   *
-	   * @param {NodeList} set
-	   * @param {!Object} $node : A custom cloned node
-	   * @param {number} idx : index to start the loop
-	   * @return {number}
-	   */
-
-
-	  function indexOfCustomNode(set, $node, idx) {
-	    return indexOf(set, $node, idx, JSCompiler_renameProperty("node"));
-	  } // using a non id (eg outerHTML or nodeValue) is extremely naive and will run into issues with nodes that may appear the same like <li></li>
-
-
-	  var counter = 1; // don't use 0 as id (falsy)
-
-	  /** @const */
-
-	  var expando = "mo_id";
-	  /**
-	   * Attempt to uniquely id an element for hashing. We could optimize this for legacy browsers but it hopefully wont be called enough to be a concern
-	   *
-	   * @param {Node} $ele
-	   * @return {(string|number)}
-	   */
-
-	  function getElementId($ele) {
-	    try {
-	      return $ele.id || ($ele[expando] = $ele[expando] || counter++);
-	    } catch (o_O) {
-	      // ie <8 will throw if you set an unknown property on a text node
-	      try {
-	        return $ele.nodeValue; // naive
-	      } catch (shitie) {
-	        // when text node is removed: https://gist.github.com/megawac/8355978 :(
-	        return counter++;
-	      }
-	    }
-	  }
-	  /**
-	   * **map** Apply a mapping function to each item of a set
-	   * @param {Array|NodeList} set
-	   * @param {Function} iterator
-	   */
-
-
-	  function map(set, iterator) {
-	    var results = [];
-
-	    for (var index = 0; index < set.length; index++) {
-	      results[index] = iterator(set[index], index, set);
-	    }
-
-	    return results;
-	  }
-	  /**
-	   * **Reduce** builds up a single result from a list of values
-	   * @param {Array|NodeList|NamedNodeMap} set
-	   * @param {Function} iterator
-	   * @param {*} [memo] Initial value of the memo.
-	   */
-
-
-	  function reduce(set, iterator, memo) {
-	    for (var index = 0; index < set.length; index++) {
-	      memo = iterator(memo, set[index], index, set);
-	    }
-
-	    return memo;
-	  }
-	  /**
-	   * **indexOf** find index of item in collection.
-	   * @param {Array|NodeList} set
-	   * @param {Object} item
-	   * @param {number} idx
-	   * @param {string} [prop] Property on set item to compare to item
-	   */
-
-
-	  function indexOf(set, item, idx, prop) {
-	    for (;
-	    /*idx = ~~idx*/
-	    idx < set.length; idx++) {
-	      // start idx is always given as this is internal
-	      if ((prop ? set[idx][prop] : set[idx]) === item) return idx;
-	    }
-
-	    return -1;
-	  }
-	  /**
-	   * @param {Object} obj
-	   * @param {(string|number)} prop
-	   * @return {boolean}
-	   */
-
-
-	  function has(obj, prop) {
-	    return obj[prop] !== undefined$1; // will be nicely inlined by gcc
-	  } // GCC hack see https://stackoverflow.com/a/23202438/1517919
-
-
-	  function JSCompiler_renameProperty(a) {
-	    return a;
-	  }
-
-	  return MutationObserver;
-	}(void 0);
 
 	var getRole_1 = createCommonjsModule(function (module, exports) {
 
@@ -4735,6 +4005,11 @@
 	var util_4 = util.isHTMLTextAreaElement;
 	var util_5 = util.safeWindow;
 
+	function _createForOfIteratorHelperLoose(o) { var i = 0; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (o = _unsupportedIterableToArray(o))) return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } i = o[Symbol.iterator](); return i.next.bind(i); }
+
+	function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(n); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+	function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 	var accessibleName = createCommonjsModule(function (module, exports) {
 	  /**
 	   * implements https://w3c.github.io/accname/
@@ -4971,19 +4246,8 @@
 	        accumulatedText = beforeContent + " " + accumulatedText;
 	      }
 
-	      for (var _iterator = queryChildNodes(node), _isArray = Array.isArray(_iterator), _i2 = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-	        var _ref;
-
-	        if (_isArray) {
-	          if (_i2 >= _iterator.length) break;
-	          _ref = _iterator[_i2++];
-	        } else {
-	          _i2 = _iterator.next();
-	          if (_i2.done) break;
-	          _ref = _i2.value;
-	        }
-
-	        var child = _ref;
+	      for (var _iterator = _createForOfIteratorHelperLoose(queryChildNodes(node)), _step; !(_step = _iterator()).done;) {
+	        var child = _step.value;
 	        var result = computeTextAlternative(child, {
 	          isEmbeddedInLabel: context.isEmbeddedInLabel,
 	          isReferenced: false,
@@ -11976,150 +11240,6 @@
 
 	var isIterable$1 = isIterable_1;
 
-	function _iterableToArrayLimit(arr, i) {
-	  if (!(isIterable$1(Object(arr)) || Object.prototype.toString.call(arr) === "[object Arguments]")) {
-	    return;
-	  }
-
-	  var _arr = [];
-	  var _n = true;
-	  var _d = false;
-	  var _e = undefined;
-
-	  try {
-	    for (var _i = getIterator$1(arr), _s; !(_n = (_s = _i.next()).done); _n = true) {
-	      _arr.push(_s.value);
-
-	      if (i && _arr.length === i) break;
-	    }
-	  } catch (err) {
-	    _d = true;
-	    _e = err;
-	  } finally {
-	    try {
-	      if (!_n && _i["return"] != null) _i["return"]();
-	    } finally {
-	      if (_d) throw _e;
-	    }
-	  }
-
-	  return _arr;
-	}
-
-	var iterableToArrayLimit = _iterableToArrayLimit;
-
-	function _nonIterableRest() {
-	  throw new TypeError("Invalid attempt to destructure non-iterable instance");
-	}
-
-	var nonIterableRest = _nonIterableRest;
-
-	function _slicedToArray(arr, i) {
-	  return arrayWithHoles(arr) || iterableToArrayLimit(arr, i) || nonIterableRest();
-	}
-
-	var slicedToArray = _slicedToArray;
-
-	var entries = entryVirtual('Array').entries;
-
-	var entries$1 = entries;
-
-	var ArrayPrototype$2 = Array.prototype;
-	var DOMIterables$1 = {
-	  DOMTokenList: true,
-	  NodeList: true
-	};
-
-	var entries_1 = function (it) {
-	  var own = it.entries;
-	  return it === ArrayPrototype$2 || it instanceof Array && own === ArrayPrototype$2.entries // eslint-disable-next-line no-prototype-builtins
-	  || DOMIterables$1.hasOwnProperty(classof(it)) ? entries$1 : own;
-	};
-
-	var entries$2 = entries_1;
-
-	var $find = arrayIteration.find;
-	var FIND = 'find';
-	var SKIPS_HOLES = true;
-	var USES_TO_LENGTH$1 = arrayMethodUsesToLength(FIND); // Shouldn't skip holes
-
-	if (FIND in []) Array(1)[FIND](function () {
-	  SKIPS_HOLES = false;
-	}); // `Array.prototype.find` method
-	// https://tc39.github.io/ecma262/#sec-array.prototype.find
-
-	_export({
-	  target: 'Array',
-	  proto: true,
-	  forced: SKIPS_HOLES || !USES_TO_LENGTH$1
-	}, {
-	  find: function (callbackfn
-	  /* , that = undefined */
-	  ) {
-	    return $find(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-	  }
-	}); // https://tc39.github.io/ecma262/#sec-array.prototype-@@unscopables
-
-	var find = entryVirtual('Array').find;
-
-	var ArrayPrototype$3 = Array.prototype;
-
-	var find_1 = function (it) {
-	  var own = it.find;
-	  return it === ArrayPrototype$3 || it instanceof Array && own === ArrayPrototype$3.find ? find : own;
-	};
-
-	var find$1 = find_1;
-
-	var find$2 = find$1;
-
-	var $stringify = getBuiltIn('JSON', 'stringify');
-	var re = /[\uD800-\uDFFF]/g;
-	var low = /^[\uD800-\uDBFF]$/;
-	var hi = /^[\uDC00-\uDFFF]$/;
-
-	var fix = function (match, offset, string) {
-	  var prev = string.charAt(offset - 1);
-	  var next = string.charAt(offset + 1);
-
-	  if (low.test(match) && !hi.test(next) || hi.test(match) && !low.test(prev)) {
-	    return "\\u" + match.charCodeAt(0).toString(16);
-	  }
-
-	  return match;
-	};
-
-	var FORCED = fails(function () {
-	  return $stringify("\uDF06\uD834") !== "\"\\udf06\\ud834\"" || $stringify("\uDEAD") !== "\"\\udead\"";
-	});
-
-	if ($stringify) {
-	  // https://github.com/tc39/proposal-well-formed-stringify
-	  _export({
-	    target: 'JSON',
-	    stat: true,
-	    forced: FORCED
-	  }, {
-	    // eslint-disable-next-line no-unused-vars
-	    stringify: function () {
-	      var result = $stringify.apply(null, arguments);
-	      return typeof result == 'string' ? result.replace(re, fix) : result;
-	    }
-	  });
-	}
-
-	if (!path.JSON) path.JSON = {
-	  stringify: JSON.stringify
-	}; // eslint-disable-next-line no-unused-vars
-
-	var stringify = function () {
-	  return path.JSON.stringify.apply(null, arguments);
-	};
-
-	var stringify$1 = stringify;
-
-	var stringify$2 = stringify$1;
-
 	var createProperty = function (object, key, value) {
 	  var propertyKey = toPrimitive(key);
 	  if (propertyKey in object) objectDefineProperty.f(object, propertyKey, createPropertyDescriptor(0, value));else object[propertyKey] = value;
@@ -12185,14 +11305,14 @@
 	  return spreadable !== undefined ? !!spreadable : isArray(O);
 	};
 
-	var FORCED$1 = !IS_CONCAT_SPREADABLE_SUPPORT || !SPECIES_SUPPORT; // `Array.prototype.concat` method
+	var FORCED = !IS_CONCAT_SPREADABLE_SUPPORT || !SPECIES_SUPPORT; // `Array.prototype.concat` method
 	// https://tc39.github.io/ecma262/#sec-array.prototype.concat
 	// with adding support of @@isConcatSpreadable and @@species
 
 	_export({
 	  target: 'Array',
 	  proto: true,
-	  forced: FORCED$1
+	  forced: FORCED
 	}, {
 	  concat: function () {
 	    // eslint-disable-line no-unused-vars
@@ -12222,48 +11342,480 @@
 	  }
 	});
 
-	var concat = entryVirtual('Array').concat;
+	var hiddenKeys$1 = enumBugKeys.concat('length', 'prototype'); // `Object.getOwnPropertyNames` method
+	// https://tc39.github.io/ecma262/#sec-object.getownpropertynames
 
-	var ArrayPrototype$4 = Array.prototype;
-
-	var concat_1 = function (it) {
-	  var own = it.concat;
-	  return it === ArrayPrototype$4 || it instanceof Array && own === ArrayPrototype$4.concat ? concat : own;
+	var f$4 = Object.getOwnPropertyNames || function (O) {
+	  return objectKeysInternal(O, hiddenKeys$1);
 	};
 
-	var concat$1 = concat_1;
-
-	var concat$2 = concat$1;
-
-	var keys$4 = entryVirtual('Array').keys;
-
-	var keys$5 = keys$4;
-
-	var ArrayPrototype$5 = Array.prototype;
-	var DOMIterables$2 = {
-	  DOMTokenList: true,
-	  NodeList: true
+	var objectGetOwnPropertyNames = {
+	  f: f$4
 	};
 
-	var keys_1 = function (it) {
-	  var own = it.keys;
-	  return it === ArrayPrototype$5 || it instanceof Array && own === ArrayPrototype$5.keys // eslint-disable-next-line no-prototype-builtins
-	  || DOMIterables$2.hasOwnProperty(classof(it)) ? keys$5 : own;
+	var nativeGetOwnPropertyNames = objectGetOwnPropertyNames.f;
+	var toString$1 = {}.toString;
+	var windowNames = typeof window == 'object' && window && Object.getOwnPropertyNames ? Object.getOwnPropertyNames(window) : [];
+
+	var getWindowNames = function (it) {
+	  try {
+	    return nativeGetOwnPropertyNames(it);
+	  } catch (error) {
+	    return windowNames.slice();
+	  }
+	}; // fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
+
+
+	var f$5 = function (it) {
+	  return windowNames && toString$1.call(it) == '[object Window]' ? getWindowNames(it) : nativeGetOwnPropertyNames(toIndexedObject(it));
 	};
 
-	var keys$6 = keys_1;
+	var objectGetOwnPropertyNamesExternal = {
+	  f: f$5
+	};
 
-	function _arrayWithoutHoles(arr) {
-	  if (isArray$3(arr)) {
-	    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) {
-	      arr2[i] = arr[i];
+	var f$6 = wellKnownSymbol;
+	var wellKnownSymbolWrapped = {
+	  f: f$6
+	};
+
+	var defineProperty$a = objectDefineProperty.f;
+
+	var defineWellKnownSymbol = function (NAME) {
+	  var Symbol = path.Symbol || (path.Symbol = {});
+	  if (!has(Symbol, NAME)) defineProperty$a(Symbol, NAME, {
+	    value: wellKnownSymbolWrapped.f(NAME)
+	  });
+	};
+
+	var $forEach$1 = arrayIteration.forEach;
+	var HIDDEN = sharedKey('hidden');
+	var SYMBOL = 'Symbol';
+	var PROTOTYPE$1 = 'prototype';
+	var TO_PRIMITIVE = wellKnownSymbol('toPrimitive');
+	var setInternalState$4 = internalState.set;
+	var getInternalState$2 = internalState.getterFor(SYMBOL);
+	var ObjectPrototype$1 = Object[PROTOTYPE$1];
+	var $Symbol = global_1.Symbol;
+	var $stringify = getBuiltIn('JSON', 'stringify');
+	var nativeGetOwnPropertyDescriptor$1 = objectGetOwnPropertyDescriptor.f;
+	var nativeDefineProperty$1 = objectDefineProperty.f;
+	var nativeGetOwnPropertyNames$1 = objectGetOwnPropertyNamesExternal.f;
+	var nativePropertyIsEnumerable$1 = objectPropertyIsEnumerable.f;
+	var AllSymbols = shared('symbols');
+	var ObjectPrototypeSymbols = shared('op-symbols');
+	var StringToSymbolRegistry = shared('string-to-symbol-registry');
+	var SymbolToStringRegistry = shared('symbol-to-string-registry');
+	var WellKnownSymbolsStore$1 = shared('wks');
+	var QObject = global_1.QObject; // Don't use setters in Qt Script, https://github.com/zloirock/core-js/issues/173
+
+	var USE_SETTER = !QObject || !QObject[PROTOTYPE$1] || !QObject[PROTOTYPE$1].findChild; // fallback for old Android, https://code.google.com/p/v8/issues/detail?id=687
+
+	var setSymbolDescriptor = descriptors && fails(function () {
+	  return objectCreate(nativeDefineProperty$1({}, 'a', {
+	    get: function get() {
+	      return nativeDefineProperty$1(this, 'a', {
+	        value: 7
+	      }).a;
+	    }
+	  })).a != 7;
+	}) ? function (O, P, Attributes) {
+	  var ObjectPrototypeDescriptor = nativeGetOwnPropertyDescriptor$1(ObjectPrototype$1, P);
+	  if (ObjectPrototypeDescriptor) delete ObjectPrototype$1[P];
+	  nativeDefineProperty$1(O, P, Attributes);
+
+	  if (ObjectPrototypeDescriptor && O !== ObjectPrototype$1) {
+	    nativeDefineProperty$1(ObjectPrototype$1, P, ObjectPrototypeDescriptor);
+	  }
+	} : nativeDefineProperty$1;
+
+	var wrap = function (tag, description) {
+	  var symbol = AllSymbols[tag] = objectCreate($Symbol[PROTOTYPE$1]);
+	  setInternalState$4(symbol, {
+	    type: SYMBOL,
+	    tag: tag,
+	    description: description
+	  });
+	  if (!descriptors) symbol.description = description;
+	  return symbol;
+	};
+
+	var isSymbol = useSymbolAsUid ? function (it) {
+	  return typeof it == 'symbol';
+	} : function (it) {
+	  return Object(it) instanceof $Symbol;
+	};
+
+	var $defineProperty = function (O, P, Attributes) {
+	  if (O === ObjectPrototype$1) $defineProperty(ObjectPrototypeSymbols, P, Attributes);
+	  anObject(O);
+	  var key = toPrimitive(P, true);
+	  anObject(Attributes);
+
+	  if (has(AllSymbols, key)) {
+	    if (!Attributes.enumerable) {
+	      if (!has(O, HIDDEN)) nativeDefineProperty$1(O, HIDDEN, createPropertyDescriptor(1, {}));
+	      O[HIDDEN][key] = true;
+	    } else {
+	      if (has(O, HIDDEN) && O[HIDDEN][key]) O[HIDDEN][key] = false;
+	      Attributes = objectCreate(Attributes, {
+	        enumerable: createPropertyDescriptor(0, false)
+	      });
 	    }
 
-	    return arr2;
+	    return setSymbolDescriptor(O, key, Attributes);
+	  }
+
+	  return nativeDefineProperty$1(O, key, Attributes);
+	};
+
+	var $defineProperties = function (O, Properties) {
+	  anObject(O);
+	  var properties = toIndexedObject(Properties);
+	  var keys = objectKeys(properties).concat($getOwnPropertySymbols(properties));
+	  $forEach$1(keys, function (key) {
+	    if (!descriptors || $propertyIsEnumerable.call(properties, key)) $defineProperty(O, key, properties[key]);
+	  });
+	  return O;
+	};
+
+	var $create = function (O, Properties) {
+	  return Properties === undefined ? objectCreate(O) : $defineProperties(objectCreate(O), Properties);
+	};
+
+	var $propertyIsEnumerable = function (V) {
+	  var P = toPrimitive(V, true);
+	  var enumerable = nativePropertyIsEnumerable$1.call(this, P);
+	  if (this === ObjectPrototype$1 && has(AllSymbols, P) && !has(ObjectPrototypeSymbols, P)) return false;
+	  return enumerable || !has(this, P) || !has(AllSymbols, P) || has(this, HIDDEN) && this[HIDDEN][P] ? enumerable : true;
+	};
+
+	var $getOwnPropertyDescriptor = function (O, P) {
+	  var it = toIndexedObject(O);
+	  var key = toPrimitive(P, true);
+	  if (it === ObjectPrototype$1 && has(AllSymbols, key) && !has(ObjectPrototypeSymbols, key)) return;
+	  var descriptor = nativeGetOwnPropertyDescriptor$1(it, key);
+
+	  if (descriptor && has(AllSymbols, key) && !(has(it, HIDDEN) && it[HIDDEN][key])) {
+	    descriptor.enumerable = true;
+	  }
+
+	  return descriptor;
+	};
+
+	var $getOwnPropertyNames = function (O) {
+	  var names = nativeGetOwnPropertyNames$1(toIndexedObject(O));
+	  var result = [];
+	  $forEach$1(names, function (key) {
+	    if (!has(AllSymbols, key) && !has(hiddenKeys, key)) result.push(key);
+	  });
+	  return result;
+	};
+
+	var $getOwnPropertySymbols = function (O) {
+	  var IS_OBJECT_PROTOTYPE = O === ObjectPrototype$1;
+	  var names = nativeGetOwnPropertyNames$1(IS_OBJECT_PROTOTYPE ? ObjectPrototypeSymbols : toIndexedObject(O));
+	  var result = [];
+	  $forEach$1(names, function (key) {
+	    if (has(AllSymbols, key) && (!IS_OBJECT_PROTOTYPE || has(ObjectPrototype$1, key))) {
+	      result.push(AllSymbols[key]);
+	    }
+	  });
+	  return result;
+	}; // `Symbol` constructor
+	// https://tc39.github.io/ecma262/#sec-symbol-constructor
+
+
+	if (!nativeSymbol) {
+	  $Symbol = function () {
+	    if (this instanceof $Symbol) throw TypeError('Symbol is not a constructor');
+	    var description = !arguments.length || arguments[0] === undefined ? undefined : String(arguments[0]);
+	    var tag = uid(description);
+
+	    var setter = function (value) {
+	      if (this === ObjectPrototype$1) setter.call(ObjectPrototypeSymbols, value);
+	      if (has(this, HIDDEN) && has(this[HIDDEN], tag)) this[HIDDEN][tag] = false;
+	      setSymbolDescriptor(this, tag, createPropertyDescriptor(1, value));
+	    };
+
+	    if (descriptors && USE_SETTER) setSymbolDescriptor(ObjectPrototype$1, tag, {
+	      configurable: true,
+	      set: setter
+	    });
+	    return wrap(tag, description);
+	  };
+
+	  redefine($Symbol[PROTOTYPE$1], 'toString', function () {
+	    return getInternalState$2(this).tag;
+	  });
+	  redefine($Symbol, 'withoutSetter', function (description) {
+	    return wrap(uid(description), description);
+	  });
+	  objectPropertyIsEnumerable.f = $propertyIsEnumerable;
+	  objectDefineProperty.f = $defineProperty;
+	  objectGetOwnPropertyDescriptor.f = $getOwnPropertyDescriptor;
+	  objectGetOwnPropertyNames.f = objectGetOwnPropertyNamesExternal.f = $getOwnPropertyNames;
+	  objectGetOwnPropertySymbols.f = $getOwnPropertySymbols;
+
+	  wellKnownSymbolWrapped.f = function (name) {
+	    return wrap(wellKnownSymbol(name), name);
+	  };
+
+	  if (descriptors) {
+	    // https://github.com/tc39/proposal-Symbol-description
+	    nativeDefineProperty$1($Symbol[PROTOTYPE$1], 'description', {
+	      configurable: true,
+	      get: function () {
+	        return getInternalState$2(this).description;
+	      }
+	    });
 	  }
 	}
 
-	var arrayWithoutHoles = _arrayWithoutHoles;
+	_export({
+	  global: true,
+	  wrap: true,
+	  forced: !nativeSymbol,
+	  sham: !nativeSymbol
+	}, {
+	  Symbol: $Symbol
+	});
+	$forEach$1(objectKeys(WellKnownSymbolsStore$1), function (name) {
+	  defineWellKnownSymbol(name);
+	});
+	_export({
+	  target: SYMBOL,
+	  stat: true,
+	  forced: !nativeSymbol
+	}, {
+	  // `Symbol.for` method
+	  // https://tc39.github.io/ecma262/#sec-symbol.for
+	  'for': function _for(key) {
+	    var string = String(key);
+	    if (has(StringToSymbolRegistry, string)) return StringToSymbolRegistry[string];
+	    var symbol = $Symbol(string);
+	    StringToSymbolRegistry[string] = symbol;
+	    SymbolToStringRegistry[symbol] = string;
+	    return symbol;
+	  },
+	  // `Symbol.keyFor` method
+	  // https://tc39.github.io/ecma262/#sec-symbol.keyfor
+	  keyFor: function (sym) {
+	    if (!isSymbol(sym)) throw TypeError(sym + ' is not a symbol');
+	    if (has(SymbolToStringRegistry, sym)) return SymbolToStringRegistry[sym];
+	  },
+	  useSetter: function useSetter() {
+	    USE_SETTER = true;
+	  },
+	  useSimple: function useSimple() {
+	    USE_SETTER = false;
+	  }
+	});
+	_export({
+	  target: 'Object',
+	  stat: true,
+	  forced: !nativeSymbol,
+	  sham: !descriptors
+	}, {
+	  // `Object.create` method
+	  // https://tc39.github.io/ecma262/#sec-object.create
+	  create: $create,
+	  // `Object.defineProperty` method
+	  // https://tc39.github.io/ecma262/#sec-object.defineproperty
+	  defineProperty: $defineProperty,
+	  // `Object.defineProperties` method
+	  // https://tc39.github.io/ecma262/#sec-object.defineproperties
+	  defineProperties: $defineProperties,
+	  // `Object.getOwnPropertyDescriptor` method
+	  // https://tc39.github.io/ecma262/#sec-object.getownpropertydescriptors
+	  getOwnPropertyDescriptor: $getOwnPropertyDescriptor
+	});
+	_export({
+	  target: 'Object',
+	  stat: true,
+	  forced: !nativeSymbol
+	}, {
+	  // `Object.getOwnPropertyNames` method
+	  // https://tc39.github.io/ecma262/#sec-object.getownpropertynames
+	  getOwnPropertyNames: $getOwnPropertyNames,
+	  // `Object.getOwnPropertySymbols` method
+	  // https://tc39.github.io/ecma262/#sec-object.getownpropertysymbols
+	  getOwnPropertySymbols: $getOwnPropertySymbols
+	}); // Chrome 38 and 39 `Object.getOwnPropertySymbols` fails on primitives
+	// https://bugs.chromium.org/p/v8/issues/detail?id=3443
+
+	_export({
+	  target: 'Object',
+	  stat: true,
+	  forced: fails(function () {
+	    objectGetOwnPropertySymbols.f(1);
+	  })
+	}, {
+	  getOwnPropertySymbols: function (it) {
+	    return objectGetOwnPropertySymbols.f(toObject(it));
+	  }
+	}); // `JSON.stringify` method behavior with symbols
+	// https://tc39.github.io/ecma262/#sec-json.stringify
+
+	if ($stringify) {
+	  var FORCED_JSON_STRINGIFY = !nativeSymbol || fails(function () {
+	    var symbol = $Symbol(); // MS Edge converts symbol values to JSON as {}
+
+	    return $stringify([symbol]) != '[null]' // WebKit converts symbol values to JSON as null
+	    || $stringify({
+	      a: symbol
+	    }) != '{}' // V8 throws on boxed symbols
+	    || $stringify(Object(symbol)) != '{}';
+	  });
+	  _export({
+	    target: 'JSON',
+	    stat: true,
+	    forced: FORCED_JSON_STRINGIFY
+	  }, {
+	    // eslint-disable-next-line no-unused-vars
+	    stringify: function (it, replacer) {
+	      var args = [it];
+	      var index = 1;
+	      var $replacer;
+
+	      while (arguments.length > index) {
+	        args.push(arguments[index++]);
+	      }
+
+	      $replacer = replacer;
+	      if (!isObject(replacer) && it === undefined || isSymbol(it)) return; // IE8 returns string on undefined
+
+	      if (!isArray(replacer)) replacer = function (key, value) {
+	        if (typeof $replacer == 'function') value = $replacer.call(this, key, value);
+	        if (!isSymbol(value)) return value;
+	      };
+	      args[1] = replacer;
+	      return $stringify.apply(null, args);
+	    }
+	  });
+	} // `Symbol.prototype[@@toPrimitive]` method
+	// https://tc39.github.io/ecma262/#sec-symbol.prototype-@@toprimitive
+
+
+	if (!$Symbol[PROTOTYPE$1][TO_PRIMITIVE]) {
+	  createNonEnumerableProperty($Symbol[PROTOTYPE$1], TO_PRIMITIVE, $Symbol[PROTOTYPE$1].valueOf);
+	} // `Symbol.prototype[@@toStringTag]` property
+	// https://tc39.github.io/ecma262/#sec-symbol.prototype-@@tostringtag
+
+
+	setToStringTag($Symbol, SYMBOL);
+	hiddenKeys[HIDDEN] = true;
+
+	// https://tc39.github.io/ecma262/#sec-symbol.asynciterator
+
+	defineWellKnownSymbol('asyncIterator');
+
+	// https://tc39.github.io/ecma262/#sec-symbol.hasinstance
+
+	defineWellKnownSymbol('hasInstance');
+
+	// https://tc39.github.io/ecma262/#sec-symbol.isconcatspreadable
+
+	defineWellKnownSymbol('isConcatSpreadable');
+
+	// https://tc39.github.io/ecma262/#sec-symbol.iterator
+
+	defineWellKnownSymbol('iterator');
+
+	// https://tc39.github.io/ecma262/#sec-symbol.match
+
+	defineWellKnownSymbol('match');
+
+	defineWellKnownSymbol('matchAll');
+
+	// https://tc39.github.io/ecma262/#sec-symbol.replace
+
+	defineWellKnownSymbol('replace');
+
+	// https://tc39.github.io/ecma262/#sec-symbol.search
+
+	defineWellKnownSymbol('search');
+
+	// https://tc39.github.io/ecma262/#sec-symbol.species
+
+	defineWellKnownSymbol('species');
+
+	// https://tc39.github.io/ecma262/#sec-symbol.split
+
+	defineWellKnownSymbol('split');
+
+	// https://tc39.github.io/ecma262/#sec-symbol.toprimitive
+
+	defineWellKnownSymbol('toPrimitive');
+
+	// https://tc39.github.io/ecma262/#sec-symbol.tostringtag
+
+	defineWellKnownSymbol('toStringTag');
+
+	// https://tc39.github.io/ecma262/#sec-symbol.unscopables
+
+	defineWellKnownSymbol('unscopables');
+
+	// https://tc39.github.io/ecma262/#sec-math-@@tostringtag
+
+	setToStringTag(Math, 'Math', true);
+
+	// https://tc39.github.io/ecma262/#sec-json-@@tostringtag
+
+	setToStringTag(global_1.JSON, 'JSON', true);
+
+	var symbol = path.Symbol;
+
+	// https://github.com/tc39/proposal-using-statement
+
+	defineWellKnownSymbol('asyncDispose');
+
+	// https://github.com/tc39/proposal-using-statement
+
+	defineWellKnownSymbol('dispose');
+
+	// https://github.com/tc39/proposal-observable
+
+	defineWellKnownSymbol('observable');
+
+	// https://github.com/tc39/proposal-pattern-matching
+
+	defineWellKnownSymbol('patternMatch');
+
+	defineWellKnownSymbol('replaceAll');
+
+	var symbol$1 = symbol;
+
+	var symbol$2 = symbol$1;
+
+	function _iterableToArrayLimit(arr, i) {
+	  if (typeof symbol$2 === "undefined" || !isIterable$1(Object(arr))) return;
+	  var _arr = [];
+	  var _n = true;
+	  var _d = false;
+	  var _e = undefined;
+
+	  try {
+	    for (var _i = getIterator$1(arr), _s; !(_n = (_s = _i.next()).done); _n = true) {
+	      _arr.push(_s.value);
+
+	      if (i && _arr.length === i) break;
+	    }
+	  } catch (err) {
+	    _d = true;
+	    _e = err;
+	  } finally {
+	    try {
+	      if (!_n && _i["return"] != null) _i["return"]();
+	    } finally {
+	      if (_d) throw _e;
+	    }
+	  }
+
+	  return _arr;
+	}
+
+	var iterableToArrayLimit = _iterableToArrayLimit;
 
 	// `Array.from` method implementation
 	// https://tc39.github.io/ecma262/#sec-array.from
@@ -12375,20 +11927,260 @@
 
 	var from_1$2 = from_1$1;
 
+	var HAS_SPECIES_SUPPORT = arrayMethodHasSpeciesSupport('slice');
+	var USES_TO_LENGTH$1 = arrayMethodUsesToLength('slice', {
+	  ACCESSORS: true,
+	  0: 0,
+	  1: 2
+	});
+	var SPECIES$3 = wellKnownSymbol('species');
+	var nativeSlice = [].slice;
+	var max$1 = Math.max; // `Array.prototype.slice` method
+	// https://tc39.github.io/ecma262/#sec-array.prototype.slice
+	// fallback for not array-like ES3 strings and DOM objects
+
+	_export({
+	  target: 'Array',
+	  proto: true,
+	  forced: !HAS_SPECIES_SUPPORT || !USES_TO_LENGTH$1
+	}, {
+	  slice: function (start, end) {
+	    var O = toIndexedObject(this);
+	    var length = toLength(O.length);
+	    var k = toAbsoluteIndex(start, length);
+	    var fin = toAbsoluteIndex(end === undefined ? length : end, length); // inline `ArraySpeciesCreate` for usage native `Array#slice` where it's possible
+
+	    var Constructor, result, n;
+
+	    if (isArray(O)) {
+	      Constructor = O.constructor; // cross-realm fallback
+
+	      if (typeof Constructor == 'function' && (Constructor === Array || isArray(Constructor.prototype))) {
+	        Constructor = undefined;
+	      } else if (isObject(Constructor)) {
+	        Constructor = Constructor[SPECIES$3];
+	        if (Constructor === null) Constructor = undefined;
+	      }
+
+	      if (Constructor === Array || Constructor === undefined) {
+	        return nativeSlice.call(O, k, fin);
+	      }
+	    }
+
+	    result = new (Constructor === undefined ? Array : Constructor)(max$1(fin - k, 0));
+
+	    for (n = 0; k < fin; k++, n++) {
+	      if (k in O) createProperty(result, n, O[k]);
+	    }
+
+	    result.length = n;
+	    return result;
+	  }
+	});
+
+	var slice = entryVirtual('Array').slice;
+
+	var ArrayPrototype$2 = Array.prototype;
+
+	var slice_1 = function (it) {
+	  var own = it.slice;
+	  return it === ArrayPrototype$2 || it instanceof Array && own === ArrayPrototype$2.slice ? slice : own;
+	};
+
+	var slice$1 = slice_1;
+
+	var slice$2 = slice$1;
+
+	function _arrayLikeToArray$1(arr, len) {
+	  if (len == null || len > arr.length) len = arr.length;
+
+	  for (var i = 0, arr2 = new Array(len); i < len; i++) {
+	    arr2[i] = arr[i];
+	  }
+
+	  return arr2;
+	}
+
+	var arrayLikeToArray = _arrayLikeToArray$1;
+
+	function _unsupportedIterableToArray$1(o, minLen) {
+	  var _context;
+
+	  if (!o) return;
+	  if (typeof o === "string") return arrayLikeToArray(o, minLen);
+
+	  var n = slice$2(_context = Object.prototype.toString.call(o)).call(_context, 8, -1);
+
+	  if (n === "Object" && o.constructor) n = o.constructor.name;
+	  if (n === "Map" || n === "Set") return from_1$2(n);
+	  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return arrayLikeToArray(o, minLen);
+	}
+
+	var unsupportedIterableToArray = _unsupportedIterableToArray$1;
+
+	function _nonIterableRest() {
+	  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+	}
+
+	var nonIterableRest = _nonIterableRest;
+
+	function _slicedToArray(arr, i) {
+	  return arrayWithHoles(arr) || iterableToArrayLimit(arr, i) || unsupportedIterableToArray(arr, i) || nonIterableRest();
+	}
+
+	var slicedToArray = _slicedToArray;
+
+	var entries = entryVirtual('Array').entries;
+
+	var entries$1 = entries;
+
+	var ArrayPrototype$3 = Array.prototype;
+	var DOMIterables$1 = {
+	  DOMTokenList: true,
+	  NodeList: true
+	};
+
+	var entries_1 = function (it) {
+	  var own = it.entries;
+	  return it === ArrayPrototype$3 || it instanceof Array && own === ArrayPrototype$3.entries // eslint-disable-next-line no-prototype-builtins
+	  || DOMIterables$1.hasOwnProperty(classof(it)) ? entries$1 : own;
+	};
+
+	var entries$2 = entries_1;
+
+	var $find = arrayIteration.find;
+	var FIND = 'find';
+	var SKIPS_HOLES = true;
+	var USES_TO_LENGTH$2 = arrayMethodUsesToLength(FIND); // Shouldn't skip holes
+
+	if (FIND in []) Array(1)[FIND](function () {
+	  SKIPS_HOLES = false;
+	}); // `Array.prototype.find` method
+	// https://tc39.github.io/ecma262/#sec-array.prototype.find
+
+	_export({
+	  target: 'Array',
+	  proto: true,
+	  forced: SKIPS_HOLES || !USES_TO_LENGTH$2
+	}, {
+	  find: function (callbackfn
+	  /* , that = undefined */
+	  ) {
+	    return $find(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
+	  }
+	}); // https://tc39.github.io/ecma262/#sec-array.prototype-@@unscopables
+
+	var find = entryVirtual('Array').find;
+
+	var ArrayPrototype$4 = Array.prototype;
+
+	var find_1 = function (it) {
+	  var own = it.find;
+	  return it === ArrayPrototype$4 || it instanceof Array && own === ArrayPrototype$4.find ? find : own;
+	};
+
+	var find$1 = find_1;
+
+	var find$2 = find$1;
+
+	var $stringify$1 = getBuiltIn('JSON', 'stringify');
+	var re = /[\uD800-\uDFFF]/g;
+	var low = /^[\uD800-\uDBFF]$/;
+	var hi = /^[\uDC00-\uDFFF]$/;
+
+	var fix = function (match, offset, string) {
+	  var prev = string.charAt(offset - 1);
+	  var next = string.charAt(offset + 1);
+
+	  if (low.test(match) && !hi.test(next) || hi.test(match) && !low.test(prev)) {
+	    return "\\u" + match.charCodeAt(0).toString(16);
+	  }
+
+	  return match;
+	};
+
+	var FORCED$1 = fails(function () {
+	  return $stringify$1("\uDF06\uD834") !== "\"\\udf06\\ud834\"" || $stringify$1("\uDEAD") !== "\"\\udead\"";
+	});
+
+	if ($stringify$1) {
+	  // https://github.com/tc39/proposal-well-formed-stringify
+	  _export({
+	    target: 'JSON',
+	    stat: true,
+	    forced: FORCED$1
+	  }, {
+	    // eslint-disable-next-line no-unused-vars
+	    stringify: function () {
+	      var result = $stringify$1.apply(null, arguments);
+	      return typeof result == 'string' ? result.replace(re, fix) : result;
+	    }
+	  });
+	}
+
+	if (!path.JSON) path.JSON = {
+	  stringify: JSON.stringify
+	}; // eslint-disable-next-line no-unused-vars
+
+	var stringify = function () {
+	  return path.JSON.stringify.apply(null, arguments);
+	};
+
+	var stringify$1 = stringify;
+
+	var stringify$2 = stringify$1;
+
+	var concat = entryVirtual('Array').concat;
+
+	var ArrayPrototype$5 = Array.prototype;
+
+	var concat_1 = function (it) {
+	  var own = it.concat;
+	  return it === ArrayPrototype$5 || it instanceof Array && own === ArrayPrototype$5.concat ? concat : own;
+	};
+
+	var concat$1 = concat_1;
+
+	var concat$2 = concat$1;
+
+	var keys$4 = entryVirtual('Array').keys;
+
+	var keys$5 = keys$4;
+
+	var ArrayPrototype$6 = Array.prototype;
+	var DOMIterables$2 = {
+	  DOMTokenList: true,
+	  NodeList: true
+	};
+
+	var keys_1 = function (it) {
+	  var own = it.keys;
+	  return it === ArrayPrototype$6 || it instanceof Array && own === ArrayPrototype$6.keys // eslint-disable-next-line no-prototype-builtins
+	  || DOMIterables$2.hasOwnProperty(classof(it)) ? keys$5 : own;
+	};
+
+	var keys$6 = keys_1;
+
+	function _arrayWithoutHoles(arr) {
+	  if (isArray$3(arr)) return arrayLikeToArray(arr);
+	}
+
+	var arrayWithoutHoles = _arrayWithoutHoles;
+
 	function _iterableToArray(iter) {
-	  if (isIterable$1(Object(iter)) || Object.prototype.toString.call(iter) === "[object Arguments]") return from_1$2(iter);
+	  if (typeof symbol$2 !== "undefined" && isIterable$1(Object(iter))) return from_1$2(iter);
 	}
 
 	var iterableToArray = _iterableToArray;
 
 	function _nonIterableSpread() {
-	  throw new TypeError("Invalid attempt to spread non-iterable instance");
+	  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 	}
 
 	var nonIterableSpread = _nonIterableSpread;
 
 	function _toConsumableArray(arr) {
-	  return arrayWithoutHoles(arr) || iterableToArray(arr) || nonIterableSpread();
+	  return arrayWithoutHoles(arr) || iterableToArray(arr) || unsupportedIterableToArray(arr) || nonIterableSpread();
 	}
 
 	var toConsumableArray = _toConsumableArray;
@@ -12547,108 +12339,6 @@
 	var lib_4 = lib.dom;
 	var lib_5 = lib.aria;
 
-	var helpers = createCommonjsModule(function (module, exports) {
-
-	  Object.defineProperty(exports, "__esModule", {
-	    value: true
-	  });
-
-	  exports.getSetTimeoutFn = function () {
-	    return runWithRealTimers(function () {
-	      return globalObj.setTimeout;
-	    });
-	  };
-	  /* eslint-disable import/prefer-default-export */
-
-	  /* eslint-env jest */
-	  // Used to avoid using Jest's fake timers and Date.now mocks
-	  // See https://github.com/TheBrainFamily/wait-for-expect/issues/4 and
-	  // https://github.com/TheBrainFamily/wait-for-expect/issues/12 for more info
-
-
-	  var globalObj = typeof window === "undefined" ? commonjsGlobal : window; // Currently this fn only supports jest timers, but it could support other test runners in the future.
-
-	  function runWithRealTimers(callback) {
-	    var usingJestFakeTimers = // eslint-disable-next-line no-underscore-dangle
-	    globalObj.setTimeout._isMockFunction && typeof jest !== "undefined";
-
-	    if (usingJestFakeTimers) {
-	      jest.useRealTimers();
-	    }
-
-	    var callbackReturnValue = callback();
-
-	    if (usingJestFakeTimers) {
-	      jest.useFakeTimers();
-	    }
-
-	    return callbackReturnValue;
-	  }
-	});
-	unwrapExports(helpers);
-	var helpers_1 = helpers.getSetTimeoutFn;
-
-	var lib$1 = createCommonjsModule(function (module, exports) {
-
-	  Object.defineProperty(exports, "__esModule", {
-	    value: true
-	  });
-	  exports.default = void 0;
-	  var defaults = {
-	    timeout: 4500,
-	    interval: 50
-	  };
-	  /**
-	   * Waits for the expectation to pass and returns a Promise
-	   *
-	   * @param  expectation  Function  Expectation that has to complete without throwing
-	   * @param  timeout  Number  Maximum wait interval, 4500ms by default
-	   * @param  interval  Number  Wait-between-retries interval, 50ms by default
-	   * @return  Promise  Promise to return a callback result
-	   */
-
-	  var waitForExpect = function (expectation) {
-	    var timeout = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaults.timeout;
-	    var interval = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : defaults.interval;
-	    var setTimeout = (0, helpers.getSetTimeoutFn)(); // eslint-disable-next-line no-param-reassign
-
-	    if (interval < 1) interval = 1;
-	    var maxTries = Math.ceil(timeout / interval);
-	    var tries = 0;
-	    return new Promise(function (resolve, reject) {
-	      var rejectOrRerun = function (error) {
-	        if (tries > maxTries) {
-	          reject(error);
-	          return;
-	        } // eslint-disable-next-line no-use-before-define
-
-
-	        setTimeout(runExpectation, interval);
-	      };
-
-	      function runExpectation() {
-	        tries += 1;
-
-	        try {
-	          Promise.resolve(expectation()).then(function () {
-	            return resolve();
-	          }).catch(rejectOrRerun);
-	        } catch (error) {
-	          rejectOrRerun(error);
-	        }
-	      }
-
-	      setTimeout(runExpectation, 0);
-	    });
-	  };
-
-	  waitForExpect.defaults = defaults;
-	  exports.default = waitForExpect;
-	  module.exports = exports.default;
-	  module.exports.default = exports.default;
-	});
-	var waitForExpect = unwrapExports(lib$1);
-
 	function _objectWithoutPropertiesLoose(source, excluded) {
 	  if (source == null) return {};
 	  var target = {};
@@ -12702,11 +12392,6 @@
 	    setImmediateFn = _runWithRealTimers.setImmediateFn,
 	    setTimeoutFn = _runWithRealTimers.setTimeoutFn;
 
-	function newMutationObserver(onMutation) {
-	  var MutationObserverConstructor = typeof window !== 'undefined' && typeof window.MutationObserver !== 'undefined' ? window.MutationObserver : MutationObserver;
-	  return new MutationObserverConstructor(onMutation);
-	}
-
 	function getDocument() {
 	  /* istanbul ignore if */
 	  if (typeof window === 'undefined') {
@@ -12714,6 +12399,23 @@
 	  }
 
 	  return window.document;
+	}
+
+	function getWindowFromNode(node) {
+	  // istanbul ignore next I'm not sure what could cause the final else so we'll leave it uncovered.
+	  if (node.defaultView) {
+	    // node is document
+	    return node.defaultView;
+	  } else if (node.ownerDocument && node.ownerDocument.defaultView) {
+	    // node is a DOM node
+	    return node.ownerDocument.defaultView;
+	  } else if (node.window) {
+	    // node is window
+	    return node.window;
+	  } else {
+	    // no idea...
+	    throw new Error("Unable to find the \"window\" object for the given node. Please file an issue with the code that's causing you to see this error: https://github.com/testing-library/dom-testing-library/issues/new");
+	  }
 	}
 
 	function inCypress(dom) {
@@ -12773,15 +12475,13 @@
 
 	var logDOM = function () {
 	  return console.log(prettyDOM.apply(void 0, arguments));
-	};
-	/* eslint no-console:0 */
-	// other parts of the code assume that all exports from
+	}; // other parts of the code assume that all exports from
 	// './queries' are query functions.
 
 
 	var config = {
 	  testIdAttribute: 'data-testid',
-	  asyncUtilTimeout: 4500,
+	  asyncUtilTimeout: 1000,
 	  // this is to support React's async `act` function.
 	  // forcing react-testing-library to wrap all async functions would've been
 	  // a total nightmare (consider wrapping every findBy* query and then also
@@ -12796,7 +12496,9 @@
 	  defaultHidden: false,
 	  // called when getBy* queries fail. (message, container) => Error
 	  getElementError: function (message, container) {
-	    return new Error([message, prettyDOM(container)].filter(Boolean).join('\n\n'));
+	    var error = new Error([message, prettyDOM(container)].filter(Boolean).join('\n\n'));
+	    error.name = 'TestingLibraryElementError';
+	    return error;
 	  }
 	};
 
@@ -12910,35 +12612,42 @@
 	  }).join('');
 	}
 
-	function waitForElement(callback, _temp) {
+	function waitFor(callback, _temp) {
 	  var _ref = _temp === void 0 ? {} : _temp,
 	      _ref$container = _ref.container,
 	      container = _ref$container === void 0 ? getDocument() : _ref$container,
 	      _ref$timeout = _ref.timeout,
 	      timeout = _ref$timeout === void 0 ? getConfig().asyncUtilTimeout : _ref$timeout,
+	      _ref$interval = _ref.interval,
+	      interval = _ref$interval === void 0 ? 50 : _ref$interval,
 	      _ref$mutationObserver = _ref.mutationObserverOptions,
 	      mutationObserverOptions = _ref$mutationObserver === void 0 ? {
 	    subtree: true,
 	    childList: true,
 	    attributes: true,
 	    characterData: true
-	  } : _ref$mutationObserver;
+	  } : _ref$mutationObserver; // created here so we get a nice stacktrace
 
+
+	  var timedOutError = new Error('Timed out in waitFor.');
+	  if (interval < 1) interval = 1;
 	  return new Promise(function (resolve, reject) {
-	    if (typeof callback !== 'function') {
-	      reject(new Error('waitForElement requires a callback as the first parameter'));
-	      return;
-	    }
-
 	    var lastError;
-	    var timer = setTimeoutFn(onTimeout, timeout);
-	    var observer = newMutationObserver(onMutation);
+	    var overallTimeoutTimer = setTimeoutFn(onTimeout, timeout);
+	    var intervalId = setInterval(checkCallback, interval);
+
+	    var _getWindowFromNode = getWindowFromNode(container),
+	        MutationObserver = _getWindowFromNode.MutationObserver;
+
+	    var observer = new MutationObserver(checkCallback);
 	    runWithRealTimers(function () {
 	      return observer.observe(container, mutationObserverOptions);
 	    });
+	    checkCallback();
 
 	    function onDone(error, result) {
-	      clearTimeoutFn(timer);
+	      clearTimeoutFn(overallTimeoutTimer);
+	      clearInterval(intervalId);
 	      setImmediateFn(function () {
 	        return observer.disconnect();
 	      });
@@ -12950,36 +12659,50 @@
 	      }
 	    }
 
-	    function onMutation() {
+	    function checkCallback() {
 	      try {
-	        var result = callback();
-
-	        if (result) {
-	          onDone(null, result);
-	        } // If `callback` returns falsy value, wait for the next mutation or timeout.
-
+	        onDone(null, callback()); // If `callback` throws, wait for the next mutation or timeout.
 	      } catch (error) {
 	        // Save the callback error to reject the promise with it.
-	        lastError = error; // If `callback` throws an error, wait for the next mutation or timeout.
+	        lastError = error;
 	      }
 	    }
 
 	    function onTimeout() {
-	      onDone(lastError || new Error('Timed out in waitForElement.'), null);
+	      onDone(lastError || timedOutError, null);
 	    }
-
-	    onMutation();
 	  });
 	}
 
-	function waitForElementWrapper() {
+	function waitForWrapper() {
 	  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
 	    args[_key] = arguments[_key];
 	  }
 
 	  return getConfig().asyncWrapper(function () {
-	    return waitForElement.apply(void 0, args);
+	    return waitFor.apply(void 0, args);
 	  });
+	}
+
+	var hasWarned = false; // deprecated... TODO: remove this method. We renamed this to `waitFor` so the
+	// code people write reads more clearly.
+
+	function wait() {
+	  for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+	    args[_key2] = arguments[_key2];
+	  } // istanbul ignore next
+
+
+	  var _args$ = args[0],
+	      first = _args$ === void 0 ? function () {} : _args$,
+	      rest = args.slice(1);
+
+	  if (!hasWarned) {
+	    hasWarned = true;
+	    console.warn("`wait` has been deprecated and replaced by `waitFor` instead. In most cases you should be able to find/replace `wait` with `waitFor`. Learn more: https://testing-library.com/docs/dom-testing-library/api-async#waitfor.");
+	  }
+
+	  return waitForWrapper.apply(void 0, [first].concat(rest));
 	}
 
 	function getMultipleElementsFoundError(message, container) {
@@ -13055,14 +12778,14 @@
 	    return els;
 	  };
 	} // this accepts a getter query function and returns a function which calls
-	// waitForElement and passing a function which invokes the getter.
+	// waitFor and passing a function which invokes the getter.
 
 
 	function makeFindQuery(getter) {
-	  return function (container, text, options, waitForElementOptions) {
-	    return waitForElementWrapper(function () {
+	  return function (container, text, options, waitForOptions) {
+	    return waitForWrapper(function () {
 	      return getter(container, text, options);
-	    }, waitForElementOptions);
+	    }, waitForOptions);
 	  };
 	}
 
@@ -13181,9 +12904,11 @@
 	    exact: exact,
 	    normalizer: matchNormalizer
 	  });
-	  var labelledElements = labels.map(function (label) {
+	  var labelledElements = labels.reduce(function (matchedElements, label) {
+	    var elementsForLabel = [];
+
 	    if (label.control) {
-	      return label.control;
+	      elementsForLabel.push(label.control);
 	    }
 	    /* istanbul ignore if */
 
@@ -13193,22 +12918,26 @@
 	      // see https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector#Escaping_special_characters
 	      // <label for="someId">text</label><input id="someId" />
 	      // .control support has landed in jsdom (https://github.com/jsdom/jsdom/issues/2175)
-	      return container.querySelector("[id=\"" + label.getAttribute('for') + "\"]");
+	      elementsForLabel.push(container.querySelector("[id=\"" + label.getAttribute('for') + "\"]"));
 	    }
 
 	    if (label.getAttribute('id')) {
 	      // <label id="someId">text</label><input aria-labelledby="someId" />
-	      return container.querySelector("[aria-labelledby~=\"" + label.getAttribute('id') + "\"]");
+	      Array.from(container.querySelectorAll("[aria-labelledby~=\"" + label.getAttribute('id') + "\"]")).forEach(function (element) {
+	        return elementsForLabel.push(element);
+	      });
 	    }
 
 	    if (label.childNodes.length) {
 	      // <label>text: <input /></label>
-	      return label.querySelector(selector);
+	      Array.from(label.querySelectorAll('button, input, meter, output, progress, select, textarea')).forEach(function (element) {
+	        return elementsForLabel.push(element);
+	      });
 	    }
 
-	    return null;
-	  }).filter(function (label) {
-	    return label !== null;
+	    return matchedElements.concat(elementsForLabel);
+	  }, []).filter(function (element) {
+	    return element !== null;
 	  }).concat(queryAllByAttribute('aria-label', container, text, {
 	    exact: exact
 	  }));
@@ -13223,7 +12952,9 @@
 	    var labelledNodes = Array.from(container.querySelectorAll("[aria-labelledby~=\"" + labelId + "\"]"));
 	    return allLabelledElements.concat(labelledNodes);
 	  }, []);
-	  return Array.from(new Set([].concat(labelledElements, ariaLabelledElements)));
+	  return Array.from(new Set([].concat(labelledElements, ariaLabelledElements))).filter(function (element) {
+	    return element.matches(selector);
+	  });
 	} // the getAll* query would normally look like this:
 	// const getAllByLabelText = makeGetAllQuery(
 	//   queryAllByLabelText,
@@ -13593,8 +13324,6 @@
 	    hidden: hidden
 	  }));
 	};
-	/* eslint no-console:0 */
-
 
 	function queryAllByRole(container, role, _temp) {
 	  var _ref = _temp === void 0 ? {} : _temp,
@@ -13820,105 +13549,145 @@
 	  }, initialValue);
 	}
 
-	function wait(callback, _temp) {
-	  if (callback === void 0) {
-	    callback = function () {};
-	  }
+	var hasWarned$1 = false; // deprecated... TODO: remove this method. People should use a find* query or
+	// wait instead the reasoning is that this doesn't really do anything useful
+	// that you can't get from using find* or wait.
 
-	  var _ref = _temp === void 0 ? {} : _temp,
-	      _ref$timeout = _ref.timeout,
-	      timeout = _ref$timeout === void 0 ? getConfig().asyncUtilTimeout : _ref$timeout,
-	      _ref$interval = _ref.interval,
-	      interval = _ref$interval === void 0 ? 50 : _ref$interval;
-
-	  return waitForExpect(callback, timeout, interval);
+	function waitForElement() {
+	  return _waitForElement.apply(this, arguments);
 	}
 
-	function waitWrapper() {
-	  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-	    args[_key] = arguments[_key];
-	  }
+	function _waitForElement() {
+	  _waitForElement = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee(callback, options) {
+	    return regenerator.wrap(function (_context) {
+	      while (1) {
+	        switch (_context.prev = _context.next) {
+	          case 0:
+	            if (!hasWarned$1) {
+	              hasWarned$1 = true;
+	              console.warn("`waitForElement` has been deprecated. Use a `find*` query (preferred: https://testing-library.com/docs/dom-testing-library/api-queries#findby) or use `wait` instead (it's the same API, so you can find/replace): https://testing-library.com/docs/dom-testing-library/api-async#waitfor");
+	            }
 
-	  return getConfig().asyncWrapper(function () {
-	    return wait.apply(void 0, args);
-	  });
-	}
+	            if (callback) {
+	              _context.next = 3;
+	              break;
+	            }
 
-	function waitForElementToBeRemoved(callback, _temp) {
-	  var _ref = _temp === void 0 ? {} : _temp,
-	      _ref$container = _ref.container,
-	      container = _ref$container === void 0 ? getDocument() : _ref$container,
-	      _ref$timeout = _ref.timeout,
-	      timeout = _ref$timeout === void 0 ? getConfig().asyncUtilTimeout : _ref$timeout,
-	      _ref$mutationObserver = _ref.mutationObserverOptions,
-	      mutationObserverOptions = _ref$mutationObserver === void 0 ? {
-	    subtree: true,
-	    childList: true,
-	    attributes: true,
-	    characterData: true
-	  } : _ref$mutationObserver;
+	            throw new Error('waitForElement requires a callback as the first parameter');
 
-	  return new Promise(function (resolve, reject) {
-	    if (typeof callback !== 'function') {
-	      reject(new Error('waitForElementToBeRemoved requires a function as the first parameter'));
-	    }
+	          case 3:
+	            return _context.abrupt("return", waitForWrapper(function () {
+	              var result = callback();
 
-	    var timer = setTimeoutFn(function () {
-	      onDone(new Error('Timed out in waitForElementToBeRemoved.'), null);
-	    }, timeout);
-	    var observer = newMutationObserver(function () {
-	      try {
-	        var _result = callback();
+	              if (!result) {
+	                throw new Error('Timed out in waitForElement.');
+	              }
 
-	        if (!_result || Array.isArray(_result) && !_result.length) {
-	          onDone(null, true);
-	        } // If `callback` returns truthy value, wait for the next mutation or timeout.
+	              return result;
+	            }, options));
 
-	      } catch (error) {
-	        onDone(null, true);
+	          case 4:
+	          case "end":
+	            return _context.stop();
+	        }
 	      }
-	    }); // Check if the element is not present synchronously,
-	    // As the name waitForElementToBeRemoved should check `present` --> `removed`
-
-	    try {
-	      var result = callback();
-
-	      if (!result || Array.isArray(result) && !result.length) {
-	        onDone(new Error('The callback function which was passed did not return an element or non-empty array of elements. waitForElementToBeRemoved requires that the element(s) exist before waiting for removal.'));
-	      } else {
-	        // Only observe for mutations only if there is element while checking synchronously
-	        runWithRealTimers(function () {
-	          return observer.observe(container, mutationObserverOptions);
-	        });
-	      }
-	    } catch (error) {
-	      onDone(error);
-	    }
-
-	    function onDone(error, result) {
-	      clearTimeoutFn(timer);
-	      setImmediateFn(function () {
-	        return observer.disconnect();
-	      });
-
-	      if (error) {
-	        reject(error);
-	      } else {
-	        resolve(result);
-	      }
-	    }
-	  });
+	    }, _callee);
+	  }));
+	  return _waitForElement.apply(this, arguments);
 	}
+	/*
+	eslint
+	  require-await: "off"
+	*/
 
-	function waitForElementToBeRemovedWrapper() {
-	  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-	    args[_key] = arguments[_key];
+
+	var isRemoved = function (result) {
+	  return !result || Array.isArray(result) && !result.length;
+	}; // Check if the element is not present.
+	// As the name implies, waitForElementToBeRemoved should check `present` --> `removed`
+
+
+	function initialCheck(elements) {
+	  if (isRemoved(elements)) {
+	    throw new Error('The element(s) given to waitForElementToBeRemoved are already removed. waitForElementToBeRemoved requires that the element(s) exist(s) before waiting for removal.');
 	  }
-
-	  return getConfig().asyncWrapper(function () {
-	    return waitForElementToBeRemoved.apply(void 0, args);
-	  });
 	}
+
+	function waitForElementToBeRemoved() {
+	  return _waitForElementToBeRemoved.apply(this, arguments);
+	}
+
+	function _waitForElementToBeRemoved() {
+	  _waitForElementToBeRemoved = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee(callback, options) {
+	    var timeoutError, elements, getRemainingElements;
+	    return regenerator.wrap(function (_context) {
+	      while (1) {
+	        switch (_context.prev = _context.next) {
+	          case 0:
+	            // created here so we get a nice stacktrace
+	            timeoutError = new Error('Timed out in waitForElementToBeRemoved.');
+
+	            if (typeof callback !== 'function') {
+	              initialCheck(callback);
+	              elements = Array.isArray(callback) ? callback : [callback];
+	              getRemainingElements = elements.map(function (element) {
+	                var parent = element.parentElement;
+
+	                while (parent.parentElement) {
+	                  parent = parent.parentElement;
+	                }
+
+	                return function () {
+	                  return parent.contains(element) ? element : null;
+	                };
+	              });
+
+	              callback = function () {
+	                return getRemainingElements.map(function (c) {
+	                  return c();
+	                }).filter(Boolean);
+	              };
+	            }
+
+	            initialCheck(callback());
+	            return _context.abrupt("return", waitForWrapper(function () {
+	              var result;
+
+	              try {
+	                result = callback();
+	              } catch (error) {
+	                if (error.name === 'TestingLibraryElementError') {
+	                  return true;
+	                }
+
+	                throw error;
+	              }
+
+	              if (!isRemoved(result)) {
+	                throw timeoutError;
+	              }
+
+	              return true;
+	            }, options));
+
+	          case 4:
+	          case "end":
+	            return _context.stop();
+	        }
+	      }
+	    }, _callee);
+	  }));
+	  return _waitForElementToBeRemoved.apply(this, arguments);
+	}
+	/*
+	eslint
+	  require-await: "off"
+	*/
+
+
+	var hasWarned$2 = false; // deprecated... TODO: remove this method. People should use wait instead
+	// the reasoning is that waiting for just any DOM change is an implementation
+	// detail. People should be waiting for a specific thing to change.
 
 	function waitForDomChange(_temp) {
 	  var _ref = _temp === void 0 ? {} : _temp,
@@ -13934,11 +13703,20 @@
 	    characterData: true
 	  } : _ref$mutationObserver;
 
+	  if (!hasWarned$2) {
+	    hasWarned$2 = true;
+	    console.warn("`waitForDomChange` has been deprecated. Use `waitFor` instead: https://testing-library.com/docs/dom-testing-library/api-async#waitfor.");
+	  }
+
 	  return new Promise(function (resolve, reject) {
 	    var timer = setTimeoutFn(function () {
 	      onDone(new Error('Timed out in waitForDomChange.'), null);
 	    }, timeout);
-	    var observer = newMutationObserver(function (mutationsList) {
+
+	    var _getWindowFromNode = getWindowFromNode(container),
+	        MutationObserver = _getWindowFromNode.MutationObserver;
+
+	    var observer = new MutationObserver(function (mutationsList) {
 	      onDone(null, mutationsList);
 	    });
 	    runWithRealTimers(function () {
@@ -14646,26 +14424,8 @@
 	  fireEvent[key] = function (node, init) {
 	    return fireEvent(node, createEvent[key](node, init));
 	  };
-	});
-
-	function getWindowFromNode(node) {
-	  // istanbul ignore next I'm not sure what could cause the final else so we'll leave it uncovered.
-	  if (node.defaultView) {
-	    // node is document
-	    return node.defaultView;
-	  } else if (node.ownerDocument && node.ownerDocument.defaultView) {
-	    // node is a DOM node
-	    return node.ownerDocument.defaultView;
-	  } else if (node.window) {
-	    // node is window
-	    return node.window;
-	  } else {
-	    // no idea...
-	    throw new Error("Unable to find the \"window\" object for the given node. fireEvent currently supports firing events on DOM nodes, document, and window. Please file an issue with the code that's causing you to see this error: https://github.com/testing-library/dom-testing-library/issues/new");
-	  }
-	} // function written after some investigation here:
+	}); // function written after some investigation here:
 	// https://github.com/facebook/react/issues/10135#issuecomment-401496776
-
 
 	function setNativeValue(element, value) {
 	  var _ref = Object.getOwnPropertyDescriptor(element, 'value') || {},
@@ -14722,7 +14482,7 @@
 
 	function actPolyfill(cb) {
 	  ReactDOM.unstable_batchedUpdates(cb);
-	  ReactDOM.render(React.createElement("div", null), document.createElement('div'));
+	  ReactDOM.render( /*#__PURE__*/React.createElement("div", null), document.createElement('div'));
 	}
 
 	var act = reactAct || actPolyfill;
@@ -14833,6 +14593,52 @@
 	  });
 	}
 	/* eslint no-console:0 */
+
+	/* istanbul ignore file */
+	// the part of this file that we need tested is definitely being run
+	// and the part that is not cannot easily have useful tests written
+	// anyway. So we're just going to ignore coverage for this file
+
+	/**
+	 * copied from React's enqueueTask.js
+	 */
+	var didWarnAboutMessageChannel = false;
+	var enqueueTask;
+
+	try {
+	  // read require off the module object to get around the bundlers.
+	  // we don't want them to detect a require and bundle a Node polyfill.
+	  var requireString = ("require" + Math.random()).slice(0, 7);
+	  var nodeRequire = module && module[requireString]; // assuming we're in node, let's try to get node's
+	  // version of setImmediate, bypassing fake timers if any.
+
+	  enqueueTask = nodeRequire('timers').setImmediate;
+	} catch (_err) {
+	  // we're in a browser
+	  // we can't use regular timers because they may still be faked
+	  // so we try MessageChannel+postMessage instead
+	  enqueueTask = function (callback) {
+	    var supportsMessageChannel = typeof MessageChannel === 'function';
+
+	    if (supportsMessageChannel) {
+	      var channel = new MessageChannel();
+	      channel.port1.onmessage = callback;
+	      channel.port2.postMessage(undefined);
+	    } else if (didWarnAboutMessageChannel === false) {
+	      didWarnAboutMessageChannel = true; // eslint-disable-next-line no-console
+
+	      console.error('This browser does not have a MessageChannel implementation, ' + 'so enqueuing tasks via await act(async () => ...) will fail. ' + 'Please file an issue at https://github.com/facebook/react/issues ' + 'if you encounter this warning.');
+	    }
+	  };
+	}
+
+	function flushMicroTasks() {
+	  return {
+	    then: function then(resolve) {
+	      enqueueTask(resolve);
+	    }
+	  };
+	}
 
 	configure({
 	  asyncWrapper: function () {
@@ -14954,10 +14760,32 @@
 	}
 
 	function cleanup() {
-	  mountedContainers.forEach(cleanupAtContainer);
+	  return _cleanup.apply(this, arguments);
 	} // maybe one day we'll expose this (perhaps even as a utility returned by render).
 	// but let's wait until someone asks for it.
 
+
+	function _cleanup() {
+	  _cleanup = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3() {
+	    return regenerator.wrap(function (_context3) {
+	      while (1) {
+	        switch (_context3.prev = _context3.next) {
+	          case 0:
+	            _context3.next = 2;
+	            return flushMicroTasks();
+
+	          case 2:
+	            mountedContainers.forEach(cleanupAtContainer);
+
+	          case 3:
+	          case "end":
+	            return _context3.stop();
+	        }
+	      }
+	    }, _callee3);
+	  }));
+	  return _cleanup.apply(this, arguments);
+	}
 
 	function cleanupAtContainer(container) {
 	  ReactDOM.unmountComponentAtNode(container);
@@ -14970,8 +14798,8 @@
 	} // react-testing-library's version of fireEvent will call
 	// dom-testing-library's version of fireEvent wrapped inside
 	// an "act" call so that after all event callbacks have been
-	// been called, the resulting useEffect callbacks will also
-	// be called.
+	// called, the resulting useEffect callbacks will also be
+	// called.
 
 
 	function fireEvent$1() {
@@ -15048,12 +14876,9 @@
 	        switch (_context.prev = _context.next) {
 	          case 0:
 	            _context.next = 2;
-	            return flushMicroTasks();
+	            return cleanup();
 
 	          case 2:
-	            cleanup();
-
-	          case 3:
 	          case "end":
 	            return _context.stop();
 	        }
@@ -15063,7 +14888,6 @@
 	}
 
 	exports.act = act;
-	exports.bindElementToQueries = getQueriesForElement;
 	exports.buildQueries = buildQueries;
 	exports.cleanup = cleanup;
 	exports.configure = configure;
@@ -15135,10 +14959,11 @@
 	exports.queryHelpers = queryHelpers;
 	exports.render = render;
 	exports.screen = screen;
-	exports.wait = waitWrapper;
+	exports.wait = wait;
+	exports.waitFor = waitForWrapper;
 	exports.waitForDomChange = waitForDomChangeWrapper;
-	exports.waitForElement = waitForElementWrapper;
-	exports.waitForElementToBeRemoved = waitForElementToBeRemovedWrapper;
+	exports.waitForElement = waitForElement;
+	exports.waitForElementToBeRemoved = waitForElementToBeRemoved;
 	exports.within = getQueriesForElement;
 
 	Object.defineProperty(exports, '__esModule', { value: true });

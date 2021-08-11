@@ -41,10 +41,8 @@
     "/inquirer",
     "/last-call-webpack-plugin",
     "/node-sass",
+    "/open-color",
     "/request-promise-core",
-    "/rewire/eslint",
-    "/rewire/inquirer",
-    "/rewire/table",
     "/sass-graph",
     "/table",
     "/webpack-manifest-plugin"

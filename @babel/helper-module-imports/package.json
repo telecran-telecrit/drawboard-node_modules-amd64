@@ -23,6 +23,7 @@
     "fetchSpec": "7.8.3"
   },
   "_requiredBy": [
+    "/@babel/helper-builder-react-jsx-experimental",
     "/@babel/helper-module-transforms",
     "/@babel/plugin-transform-async-to-generator",
     "/@babel/plugin-transform-runtime",

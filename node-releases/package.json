@@ -1,32 +1,31 @@
 {
   "_args": [
     [
-      "node-releases@1.1.49",
+      "node-releases@1.1.52",
       "/home/pro/Solutions/drawboard-light"
     ]
   ],
-  "_from": "node-releases@1.1.49",
-  "_id": "node-releases@1.1.49",
+  "_from": "node-releases@1.1.52",
+  "_id": "node-releases@1.1.52",
   "_inBundle": false,
-  "_integrity": "sha512-xH8t0LS0disN0mtRCh+eByxFPie+msJUBL/lJDBuap53QGiYPa9joh83K4pCZgWJ+2L4b9h88vCVdXQ60NO2bg==",
+  "_integrity": "sha512-snSiT1UypkgGt2wxPqS6ImEUICbNCMb31yaxWrOLXjhlt2z2/IBpaOxzONExqSm4y5oLnAqjjRWu+wsDzK5yNQ==",
   "_location": "/node-releases",
   "_phantomChildren": {},
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "node-releases@1.1.49",
+    "raw": "node-releases@1.1.52",
     "name": "node-releases",
     "escapedName": "node-releases",
-    "rawSpec": "1.1.49",
+    "rawSpec": "1.1.52",
     "saveSpec": null,
-    "fetchSpec": "1.1.49"
+    "fetchSpec": "1.1.52"
   },
   "_requiredBy": [
-    "/browserslist",
-    "/react-dev-utils/browserslist"
+    "/browserslist"
   ],
-  "_resolved": "https://registry.npmjs.org/node-releases/-/node-releases-1.1.49.tgz",
-  "_spec": "1.1.49",
+  "_resolved": "https://registry.npmjs.org/node-releases/-/node-releases-1.1.52.tgz",
+  "_spec": "1.1.52",
   "_where": "/home/pro/Solutions/drawboard-light",
   "author": {
     "name": "Sergey Rubanov",
@@ -55,5 +54,5 @@
     "fetch": "node scripts/fetch.js",
     "process": "node scripts/process.js"
   },
-  "version": "1.1.49"
+  "version": "1.1.52"
 }

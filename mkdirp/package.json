@@ -22,8 +22,6 @@
     "fetchSpec": "0.5.1"
   },
   "_requiredBy": [
-    "/asar",
-    "/babel-loader",
     "/cacache",
     "/copy-concurrently",
     "/eslint",
@@ -36,8 +34,6 @@
     "/node-gyp",
     "/node-sass",
     "/portfinder",
-    "/rewire/eslint",
-    "/rewire/write",
     "/svgo",
     "/webpack",
     "/webpack-dev-middleware",

@@ -27,6 +27,7 @@
     "/@testing-library/dom/ansi-styles",
     "/@testing-library/jest-dom/ansi-styles",
     "/@types/jest/ansi-styles",
+    "/@types/testing-library__dom/ansi-styles",
     "/@types/testing-library__react/ansi-styles",
     "/husky/ansi-styles",
     "/lint-staged/ansi-styles"

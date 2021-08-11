@@ -23,8 +23,6 @@ Object.defineProperty(exports, "act", {
   }
 });
 
-var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
-
 var _react = _interopRequireDefault(require("react"));
 
 var _reactDom = _interopRequireDefault(require("react-dom"));
@@ -43,6 +41,8 @@ Object.keys(_dom).forEach(function (key) {
 });
 
 var _actCompat = _interopRequireWildcard(require("./act-compat"));
+
+var _flushMicrotasks = _interopRequireDefault(require("./flush-microtasks"));
 
 (0, _dom.configure)({
   asyncWrapper: async cb => {
@@ -86,7 +86,7 @@ function render(ui, {
       _reactDom.default.render(wrapUiIfNeeded(ui), container);
     }
   });
-  return (0, _extends2.default)({
+  return {
     container,
     baseElement,
     debug: (el = baseElement, maxLength, options) => Array.isArray(el) ? // eslint-disable-next-line no-console
@@ -109,11 +109,13 @@ function render(ui, {
       const template = document.createElement('template');
       template.innerHTML = container.innerHTML;
       return template.content;
-    }
-  }, (0, _dom.getQueriesForElement)(baseElement, queries));
+    },
+    ...(0, _dom.getQueriesForElement)(baseElement, queries)
+  };
 }
 
-function cleanup() {
+async function cleanup() {
+  await (0, _flushMicrotasks.default)();
   mountedContainers.forEach(cleanupAtContainer);
 } // maybe one day we'll expose this (perhaps even as a utility returned by render).
 // but let's wait until someone asks for it.
@@ -130,8 +132,8 @@ function cleanupAtContainer(container) {
 } // react-testing-library's version of fireEvent will call
 // dom-testing-library's version of fireEvent wrapped inside
 // an "act" call so that after all event callbacks have been
-// been called, the resulting useEffect callbacks will also
-// be called.
+// called, the resulting useEffect callbacks will also be
+// called.
 
 
 function fireEvent(...args) {

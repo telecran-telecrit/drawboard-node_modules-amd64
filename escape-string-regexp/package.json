@@ -28,8 +28,7 @@
     "/listr-update-renderer/chalk",
     "/listr-update-renderer/figures",
     "/listr-verbose-renderer/figures",
-    "/node-sass/chalk",
-    "/rewire/figures"
+    "/node-sass/chalk"
   ],
   "_resolved": "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz",
   "_spec": "1.0.5",

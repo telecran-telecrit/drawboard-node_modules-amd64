@@ -23,6 +23,7 @@
   },
   "_requiredBy": [
     "/postcss-attribute-case-insensitive",
+    "/postcss-calc",
     "/postcss-modules-local-by-default",
     "/postcss-modules-scope"
   ],

@@ -26,7 +26,6 @@
     "/har-validator",
     "/mini-css-extract-plugin/schema-utils",
     "/postcss-loader/schema-utils",
-    "/schema-utils",
     "/style-loader/schema-utils",
     "/table",
     "/webpack",

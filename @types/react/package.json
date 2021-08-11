@@ -1,34 +1,34 @@
 {
   "_args": [
     [
-      "@types/react@16.9.23",
+      "@types/react@16.9.32",
       "/home/pro/Solutions/drawboard-light"
     ]
   ],
   "_development": true,
-  "_from": "@types/react@16.9.23",
-  "_id": "@types/react@16.9.23",
+  "_from": "@types/react@16.9.32",
+  "_id": "@types/react@16.9.32",
   "_inBundle": false,
-  "_integrity": "sha512-SsGVT4E7L2wLN3tPYLiF20hmZTPGuzaayVunfgXzUn1x4uHVsKH6QDJQ/TdpHqwsTLd4CwrmQ2vOgxN7gE24gw==",
+  "_integrity": "sha512-fmejdp0CTH00mOJmxUPPbWCEBWPvRIL4m8r0qD+BSDUqmutPyGQCHifzMpMzdvZwROdEdL78IuZItntFWgPXHQ==",
   "_location": "/@types/react",
   "_phantomChildren": {},
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "@types/react@16.9.23",
+    "raw": "@types/react@16.9.32",
     "name": "@types/react",
     "escapedName": "@types%2freact",
     "scope": "@types",
-    "rawSpec": "16.9.23",
+    "rawSpec": "16.9.32",
     "saveSpec": null,
-    "fetchSpec": "16.9.23"
+    "fetchSpec": "16.9.32"
   },
   "_requiredBy": [
     "#DEV:/",
     "/@types/react-dom"
   ],
-  "_resolved": "https://registry.npmjs.org/@types/react/-/react-16.9.23.tgz",
-  "_spec": "16.9.23",
+  "_resolved": "https://registry.npmjs.org/@types/react/-/react-16.9.32.tgz",
+  "_spec": "16.9.32",
   "_where": "/home/pro/Solutions/drawboard-light",
   "bugs": {
     "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/issues"
@@ -144,6 +144,6 @@
   "scripts": {},
   "typeScriptVersion": "2.8",
   "types": "index.d.ts",
-  "typesPublisherContentHash": "d93df1f343863823e11bbdb83ad4252bf36299ffa581619248621a5c0a518cea",
-  "version": "16.9.23"
+  "typesPublisherContentHash": "b6c843ee5b74173e76c5b371d90c54423a90d03b8636460d25d754782efefbe3",
+  "version": "16.9.32"
 }

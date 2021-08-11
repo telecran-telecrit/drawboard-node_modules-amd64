@@ -1,17 +1,12 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.getWindowFromNode = getWindowFromNode;
 exports.getDocument = getDocument;
-exports.newMutationObserver = newMutationObserver;
 exports.runWithRealTimers = runWithRealTimers;
 exports.setTimeout = exports.setImmediate = exports.clearTimeout = void 0;
-
-var _mutationobserverShim = _interopRequireDefault(require("@sheerun/mutationobserver-shim"));
-
 const globalObj = typeof window === 'undefined' ? global : window; // Currently this fn only supports jest timers, but it could support other test runners in the future.
 
 function runWithRealTimers(callback) {
@@ -54,11 +49,6 @@ exports.setTimeout = setTimeoutFn;
 exports.setImmediate = setImmediateFn;
 exports.clearTimeout = clearTimeoutFn;
 
-function newMutationObserver(onMutation) {
-  const MutationObserverConstructor = typeof window !== 'undefined' && typeof window.MutationObserver !== 'undefined' ? window.MutationObserver : _mutationobserverShim.default;
-  return new MutationObserverConstructor(onMutation);
-}
-
 function getDocument() {
   /* istanbul ignore if */
   if (typeof window === 'undefined') {
@@ -66,4 +56,21 @@ function getDocument() {
   }
 
   return window.document;
+}
+
+function getWindowFromNode(node) {
+  // istanbul ignore next I'm not sure what could cause the final else so we'll leave it uncovered.
+  if (node.defaultView) {
+    // node is document
+    return node.defaultView;
+  } else if (node.ownerDocument && node.ownerDocument.defaultView) {
+    // node is a DOM node
+    return node.ownerDocument.defaultView;
+  } else if (node.window) {
+    // node is window
+    return node.window;
+  } else {
+    // no idea...
+    throw new Error(`Unable to find the "window" object for the given node. Please file an issue with the code that's causing you to see this error: https://github.com/testing-library/dom-testing-library/issues/new`);
+  }
 }

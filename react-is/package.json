@@ -25,6 +25,7 @@
     "/@testing-library/dom/pretty-format",
     "/@testing-library/jest-dom/pretty-format",
     "/@types/jest/pretty-format",
+    "/@types/testing-library__dom/pretty-format",
     "/@types/testing-library__react/pretty-format",
     "/pretty-format",
     "/prop-types"

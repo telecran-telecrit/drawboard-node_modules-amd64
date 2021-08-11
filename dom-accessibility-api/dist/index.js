@@ -1,7 +1,15 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var accessible_name_1 = require("./accessible-name");
-exports.computeAccessibleName = accessible_name_1.computeAccessibleName;
-var getRole_1 = require("./getRole");
-exports.getRole = getRole_1.default;
+
+exports.__esModule = true;
+exports.getRole = exports.computeAccessibleName = void 0;
+
+var _accessibleName = require("./accessible-name");
+
+exports.computeAccessibleName = _accessibleName.computeAccessibleName;
+
+var _getRole = _interopRequireDefault(require("./getRole"));
+
+exports.getRole = _getRole.default;
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 //# sourceMappingURL=index.js.map

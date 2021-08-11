@@ -23,8 +23,7 @@
   },
   "_requiredBy": [
     "/eslint",
-    "/jest-snapshot",
-    "/rewire/eslint"
+    "/jest-snapshot"
   ],
   "_resolved": "https://registry.npmjs.org/natural-compare/-/natural-compare-1.4.0.tgz",
   "_spec": "1.4.0",

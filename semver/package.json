@@ -24,6 +24,7 @@
   "_requiredBy": [
     "/@typescript-eslint/typescript-estree",
     "/eslint",
+    "/eslint-plugin-react",
     "/istanbul-lib-instrument",
     "/jest-snapshot",
     "/node-releases",

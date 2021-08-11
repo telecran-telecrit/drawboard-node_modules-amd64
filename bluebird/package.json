@@ -22,7 +22,6 @@
     "fetchSpec": "3.7.2"
   },
   "_requiredBy": [
-    "/tmp-promise",
     "/webpack/cacache"
   ],
   "_resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.7.2.tgz",

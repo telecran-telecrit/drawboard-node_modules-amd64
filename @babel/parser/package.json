@@ -1,26 +1,26 @@
 {
   "_args": [
     [
-      "@babel/parser@7.8.4",
+      "@babel/parser@7.9.0",
       "/home/pro/Solutions/drawboard-light"
     ]
   ],
-  "_from": "@babel/parser@7.8.4",
-  "_id": "@babel/parser@7.8.4",
+  "_from": "@babel/parser@7.9.0",
+  "_id": "@babel/parser@7.9.0",
   "_inBundle": false,
-  "_integrity": "sha512-0fKu/QqildpXmPVaRBoXOlyBb3MC+J0A66x97qEfLOMkn3u6nfY5esWogQwi/K0BjASYy4DbnsEWnpNL6qT5Mw==",
+  "_integrity": "sha512-Iwyp00CZsypoNJcpXCbq3G4tcDgphtlMwMVrMhhZ//XBkqjXF7LW6V511yk0+pBX3ZwwGnPea+pTKNJiqA7pUg==",
   "_location": "/@babel/parser",
   "_phantomChildren": {},
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "@babel/parser@7.8.4",
+    "raw": "@babel/parser@7.9.0",
     "name": "@babel/parser",
     "escapedName": "@babel%2fparser",
     "scope": "@babel",
-    "rawSpec": "7.8.4",
+    "rawSpec": "7.9.0",
     "saveSpec": null,
-    "fetchSpec": "7.8.4"
+    "fetchSpec": "7.9.0"
   },
   "_requiredBy": [
     "/@babel/core",
@@ -31,8 +31,8 @@
     "/babel-eslint",
     "/istanbul-lib-instrument"
   ],
-  "_resolved": "https://registry.npmjs.org/@babel/parser/-/parser-7.8.4.tgz",
-  "_spec": "7.8.4",
+  "_resolved": "https://registry.npmjs.org/@babel/parser/-/parser-7.9.0.tgz",
+  "_spec": "7.9.0",
   "_where": "/home/pro/Solutions/drawboard-light",
   "author": {
     "name": "Sebastian McKenzie",
@@ -44,9 +44,9 @@
   "description": "A JavaScript parser",
   "devDependencies": {
     "@babel/code-frame": "^7.8.3",
-    "@babel/helper-fixtures": "^7.8.3",
-    "charcodes": "^0.2.0",
-    "unicode-12.0.0": "^0.7.9"
+    "@babel/helper-fixtures": "^7.8.6",
+    "@babel/helper-validator-identifier": "^7.9.0",
+    "charcodes": "^0.2.0"
   },
   "engines": {
     "node": ">=6.0.0"
@@ -56,7 +56,7 @@
     "lib",
     "typings"
   ],
-  "gitHead": "5c2e6bc07fed3d28801d93168622c99ae622653a",
+  "gitHead": "8d5e422be27251cfaadf8dd2536b31b4a5024b02",
   "homepage": "https://babeljs.io/",
   "keywords": [
     "babel",
@@ -77,5 +77,5 @@
     "url": "https://github.com/babel/babel/tree/master/packages/babel-parser"
   },
   "types": "typings/babel-parser.d.ts",
-  "version": "7.8.4"
+  "version": "7.9.0"
 }

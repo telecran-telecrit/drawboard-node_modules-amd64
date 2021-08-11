@@ -40,7 +40,6 @@
     "/meow/load-json-file",
     "/meow/path-type",
     "/node-gyp",
-    "/rewire/flat-cache",
     "/sass-graph/load-json-file",
     "/sass-graph/path-type",
     "/watchpack",

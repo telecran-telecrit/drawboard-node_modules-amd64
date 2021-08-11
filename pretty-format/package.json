@@ -22,7 +22,6 @@
     "fetchSpec": "24.9.0"
   },
   "_requiredBy": [
-    "/@types/testing-library__dom",
     "/jest-config",
     "/jest-diff",
     "/jest-each",

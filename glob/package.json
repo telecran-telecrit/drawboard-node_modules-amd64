@@ -34,7 +34,6 @@
     "/jest-runtime",
     "/node-gyp",
     "/node-sass",
-    "/rewire/eslint",
     "/rimraf",
     "/sass-graph",
     "/test-exclude",

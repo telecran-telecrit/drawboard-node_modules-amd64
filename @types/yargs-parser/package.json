@@ -26,6 +26,7 @@
     "/@testing-library/dom/@types/yargs",
     "/@testing-library/jest-dom/@types/yargs",
     "/@types/jest/@types/yargs",
+    "/@types/testing-library__dom/@types/yargs",
     "/@types/testing-library__react/@types/yargs",
     "/@types/yargs"
   ],

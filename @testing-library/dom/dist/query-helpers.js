@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.getElementError = getElementError;
 exports.getMultipleElementsFoundError = getMultipleElementsFoundError;
 exports.queryAllByAttribute = queryAllByAttribute;
 exports.queryByAttribute = queryByAttribute;
@@ -13,12 +14,16 @@ exports.buildQueries = buildQueries;
 
 var _matches = require("./matches");
 
-var _waitForElement = require("./wait-for-element");
+var _waitFor = require("./wait-for");
 
 var _config = require("./config");
 
+function getElementError(message, container) {
+  return (0, _config.getConfig)().getElementError(message, container);
+}
+
 function getMultipleElementsFoundError(message, container) {
-  return (0, _config.getConfig)().getElementError(`${message}\n\n(If this is intentional, then use the \`*AllBy*\` variant of the query (like \`queryAllByText\`, \`getAllByText\`, or \`findAllByText\`)).`, container);
+  return getElementError(`${message}\n\n(If this is intentional, then use the \`*AllBy*\` variant of the query (like \`queryAllByText\`, \`getAllByText\`, or \`findAllByText\`)).`, container);
 }
 
 function queryAllByAttribute(attribute, container, text, {
@@ -74,11 +79,11 @@ function makeGetAllQuery(allQuery, getMissingError) {
     return els;
   };
 } // this accepts a getter query function and returns a function which calls
-// waitForElement and passing a function which invokes the getter.
+// waitFor and passing a function which invokes the getter.
 
 
 function makeFindQuery(getter) {
-  return (container, text, options, waitForElementOptions) => (0, _waitForElement.waitForElement)(() => getter(container, text, options), waitForElementOptions);
+  return (container, text, options, waitForOptions) => (0, _waitFor.waitFor)(() => getter(container, text, options), waitForOptions);
 }
 
 function buildQueries(queryAllBy, getMultipleError, getMissingError) {

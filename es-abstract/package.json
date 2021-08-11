@@ -24,11 +24,14 @@
   "_requiredBy": [
     "/array-includes",
     "/array.prototype.flat",
+    "/internal-slot",
     "/object.entries",
     "/object.fromentries",
     "/object.getownpropertydescriptors",
     "/object.values",
     "/regexp.prototype.flags",
+    "/side-channel",
+    "/string.prototype.matchall",
     "/util.promisify"
   ],
   "_resolved": "https://registry.npmjs.org/es-abstract/-/es-abstract-1.17.4.tgz",

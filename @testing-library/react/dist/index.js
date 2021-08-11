@@ -1,12 +1,8 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _flushMicrotasks = _interopRequireDefault(require("./flush-microtasks"));
 
 var _pure = require("./pure");
 
@@ -27,7 +23,6 @@ Object.keys(_pure).forEach(function (key) {
 // or set the RTL_SKIP_AUTO_CLEANUP env variable to 'true'.
 if (typeof afterEach === 'function' && !process.env.RTL_SKIP_AUTO_CLEANUP) {
   afterEach(async () => {
-    await (0, _flushMicrotasks.default)();
-    (0, _pure.cleanup)();
+    await (0, _pure.cleanup)();
   });
 }

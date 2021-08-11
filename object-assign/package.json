@@ -32,7 +32,6 @@
     "/react",
     "/react-app-polyfill",
     "/react-dom",
-    "/rewire/file-entry-cache",
     "/scheduler"
   ],
   "_resolved": "https://registry.npmjs.org/object-assign/-/object-assign-4.1.1.tgz",

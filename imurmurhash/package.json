@@ -24,7 +24,6 @@
   "_requiredBy": [
     "/eslint",
     "/fs-write-stream-atomic",
-    "/rewire/eslint",
     "/unique-slug",
     "/write-file-atomic"
   ],

@@ -57,9 +57,11 @@ function queryAllByLabelText(container, text, {
     exact,
     normalizer: matchNormalizer
   });
-  const labelledElements = labels.map(label => {
+  const labelledElements = labels.reduce((matchedElements, label) => {
+    const elementsForLabel = [];
+
     if (label.control) {
-      return label.control;
+      elementsForLabel.push(label.control);
     }
     /* istanbul ignore if */
 
@@ -69,21 +71,21 @@ function queryAllByLabelText(container, text, {
       // see https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector#Escaping_special_characters
       // <label for="someId">text</label><input id="someId" />
       // .control support has landed in jsdom (https://github.com/jsdom/jsdom/issues/2175)
-      return container.querySelector(`[id="${label.getAttribute('for')}"]`);
+      elementsForLabel.push(container.querySelector(`[id="${label.getAttribute('for')}"]`));
     }
 
     if (label.getAttribute('id')) {
       // <label id="someId">text</label><input aria-labelledby="someId" />
-      return container.querySelector(`[aria-labelledby~="${label.getAttribute('id')}"]`);
+      Array.from(container.querySelectorAll(`[aria-labelledby~="${label.getAttribute('id')}"]`)).forEach(element => elementsForLabel.push(element));
     }
 
     if (label.childNodes.length) {
       // <label>text: <input /></label>
-      return label.querySelector(selector);
+      Array.from(label.querySelectorAll('button, input, meter, output, progress, select, textarea')).forEach(element => elementsForLabel.push(element));
     }
 
-    return null;
-  }).filter(label => label !== null).concat((0, _allUtils.queryAllByAttribute)('aria-label', container, text, {
+    return matchedElements.concat(elementsForLabel);
+  }, []).filter(element => element !== null).concat((0, _allUtils.queryAllByAttribute)('aria-label', container, text, {
     exact
   }));
   const possibleAriaLabelElements = (0, _text.queryAllByText)(container, text, {
@@ -97,7 +99,7 @@ function queryAllByLabelText(container, text, {
     const labelledNodes = Array.from(container.querySelectorAll(`[aria-labelledby~="${labelId}"]`));
     return allLabelledElements.concat(labelledNodes);
   }, []);
-  return Array.from(new Set([...labelledElements, ...ariaLabelledElements]));
+  return Array.from(new Set([...labelledElements, ...ariaLabelledElements])).filter(element => element.matches(selector));
 } // the getAll* query would normally look like this:
 // const getAllByLabelText = makeGetAllQuery(
 //   queryAllByLabelText,

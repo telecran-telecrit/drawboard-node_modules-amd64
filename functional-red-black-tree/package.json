@@ -23,8 +23,7 @@
   },
   "_requiredBy": [
     "/@typescript-eslint/eslint-plugin",
-    "/eslint",
-    "/rewire/eslint"
+    "/eslint"
   ],
   "_resolved": "https://registry.npmjs.org/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz",
   "_spec": "1.0.1",

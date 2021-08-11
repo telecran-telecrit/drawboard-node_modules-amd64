@@ -1,9 +1,9 @@
 import _extends from '@babel/runtime/helpers/esm/extends';
 import prettyFormat from 'pretty-format';
-import MutationObserver from '@sheerun/mutationobserver-shim';
 import { computeAccessibleName } from 'dom-accessibility-api';
 import { elementRoles } from 'aria-query';
-import waitForExpect from 'wait-for-expect';
+import _regeneratorRuntime from '@babel/runtime/regenerator';
+import _asyncToGenerator from '@babel/runtime/helpers/esm/asyncToGenerator';
 import _objectWithoutPropertiesLoose from '@babel/runtime/helpers/esm/objectWithoutPropertiesLoose';
 
 var globalObj = typeof window === 'undefined' ? global : window; // Currently this fn only supports jest timers, but it could support other test runners in the future.
@@ -44,11 +44,6 @@ var _runWithRealTimers = runWithRealTimers(getTimeFunctions),
     setImmediateFn = _runWithRealTimers.setImmediateFn,
     setTimeoutFn = _runWithRealTimers.setTimeoutFn;
 
-function newMutationObserver(onMutation) {
-  var MutationObserverConstructor = typeof window !== 'undefined' && typeof window.MutationObserver !== 'undefined' ? window.MutationObserver : MutationObserver;
-  return new MutationObserverConstructor(onMutation);
-}
-
 function getDocument() {
   /* istanbul ignore if */
   if (typeof window === 'undefined') {
@@ -56,6 +51,23 @@ function getDocument() {
   }
 
   return window.document;
+}
+
+function getWindowFromNode(node) {
+  // istanbul ignore next I'm not sure what could cause the final else so we'll leave it uncovered.
+  if (node.defaultView) {
+    // node is document
+    return node.defaultView;
+  } else if (node.ownerDocument && node.ownerDocument.defaultView) {
+    // node is a DOM node
+    return node.ownerDocument.defaultView;
+  } else if (node.window) {
+    // node is window
+    return node.window;
+  } else {
+    // no idea...
+    throw new Error("Unable to find the \"window\" object for the given node. Please file an issue with the code that's causing you to see this error: https://github.com/testing-library/dom-testing-library/issues/new");
+  }
 }
 
 function inCypress(dom) {
@@ -116,14 +128,13 @@ function prettyDOM(dom, maxLength, options) {
 var logDOM = function () {
   return console.log(prettyDOM.apply(void 0, arguments));
 };
-/* eslint no-console:0 */
 
 // other parts of the code assume that all exports from
 // './queries' are query functions.
 
 var config = {
   testIdAttribute: 'data-testid',
-  asyncUtilTimeout: 4500,
+  asyncUtilTimeout: 1000,
   // this is to support React's async `act` function.
   // forcing react-testing-library to wrap all async functions would've been
   // a total nightmare (consider wrapping every findBy* query and then also
@@ -138,7 +149,9 @@ var config = {
   defaultHidden: false,
   // called when getBy* queries fail. (message, container) => Error
   getElementError: function getElementError(message, container) {
-    return new Error([message, prettyDOM(container)].filter(Boolean).join('\n\n'));
+    var error = new Error([message, prettyDOM(container)].filter(Boolean).join('\n\n'));
+    error.name = 'TestingLibraryElementError';
+    return error;
   }
 };
 function configure(newConfig) {
@@ -250,12 +263,14 @@ function getNodeText(node) {
   }).join('');
 }
 
-function waitForElement(callback, _temp) {
+function waitFor(callback, _temp) {
   var _ref = _temp === void 0 ? {} : _temp,
       _ref$container = _ref.container,
       container = _ref$container === void 0 ? getDocument() : _ref$container,
       _ref$timeout = _ref.timeout,
       timeout = _ref$timeout === void 0 ? getConfig().asyncUtilTimeout : _ref$timeout,
+      _ref$interval = _ref.interval,
+      interval = _ref$interval === void 0 ? 50 : _ref$interval,
       _ref$mutationObserver = _ref.mutationObserverOptions,
       mutationObserverOptions = _ref$mutationObserver === void 0 ? {
     subtree: true,
@@ -264,21 +279,30 @@ function waitForElement(callback, _temp) {
     characterData: true
   } : _ref$mutationObserver;
 
-  return new Promise(function (resolve, reject) {
-    if (typeof callback !== 'function') {
-      reject(new Error('waitForElement requires a callback as the first parameter'));
-      return;
-    }
+  if (typeof callback !== 'function') {
+    throw new TypeError('Received `callback` arg must be a function');
+  } // created here so we get a nice stacktrace
 
+
+  var timedOutError = new Error('Timed out in waitFor.');
+  if (interval < 1) interval = 1;
+  return new Promise(function (resolve, reject) {
     var lastError;
-    var timer = setTimeoutFn(onTimeout, timeout);
-    var observer = newMutationObserver(onMutation);
+    var overallTimeoutTimer = setTimeoutFn(onTimeout, timeout);
+    var intervalId = setInterval(checkCallback, interval);
+
+    var _getWindowFromNode = getWindowFromNode(container),
+        MutationObserver = _getWindowFromNode.MutationObserver;
+
+    var observer = new MutationObserver(checkCallback);
     runWithRealTimers(function () {
       return observer.observe(container, mutationObserverOptions);
     });
+    checkCallback();
 
     function onDone(error, result) {
-      clearTimeoutFn(timer);
+      clearTimeoutFn(overallTimeoutTimer);
+      clearInterval(intervalId);
       setImmediateFn(function () {
         return observer.disconnect();
       });
@@ -290,40 +314,58 @@ function waitForElement(callback, _temp) {
       }
     }
 
-    function onMutation() {
+    function checkCallback() {
       try {
-        var result = callback();
-
-        if (result) {
-          onDone(null, result);
-        } // If `callback` returns falsy value, wait for the next mutation or timeout.
-
+        onDone(null, callback()); // If `callback` throws, wait for the next mutation or timeout.
       } catch (error) {
         // Save the callback error to reject the promise with it.
-        lastError = error; // If `callback` throws an error, wait for the next mutation or timeout.
+        lastError = error;
       }
     }
 
     function onTimeout() {
-      onDone(lastError || new Error('Timed out in waitForElement.'), null);
+      onDone(lastError || timedOutError, null);
     }
-
-    onMutation();
   });
 }
 
-function waitForElementWrapper() {
+function waitForWrapper() {
   for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
     args[_key] = arguments[_key];
   }
 
   return getConfig().asyncWrapper(function () {
-    return waitForElement.apply(void 0, args);
+    return waitFor.apply(void 0, args);
   });
 }
 
+var hasWarned = false; // deprecated... TODO: remove this method. We renamed this to `waitFor` so the
+// code people write reads more clearly.
+
+function wait() {
+  for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+    args[_key2] = arguments[_key2];
+  }
+
+  // istanbul ignore next
+  var _args$ = args[0],
+      first = _args$ === void 0 ? function () {} : _args$,
+      rest = args.slice(1);
+
+  if (!hasWarned) {
+    hasWarned = true;
+    console.warn("`wait` has been deprecated and replaced by `waitFor` instead. In most cases you should be able to find/replace `wait` with `waitFor`. Learn more: https://testing-library.com/docs/dom-testing-library/api-async#waitfor.");
+  }
+
+  return waitForWrapper.apply(void 0, [first].concat(rest));
+}
+
+function getElementError(message, container) {
+  return getConfig().getElementError(message, container);
+}
+
 function getMultipleElementsFoundError(message, container) {
-  return getConfig().getElementError(message + "\n\n(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).", container);
+  return getElementError(message + "\n\n(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).", container);
 }
 
 function queryAllByAttribute(attribute, container, text, _temp) {
@@ -395,14 +437,14 @@ function makeGetAllQuery(allQuery, getMissingError) {
     return els;
   };
 } // this accepts a getter query function and returns a function which calls
-// waitForElement and passing a function which invokes the getter.
+// waitFor and passing a function which invokes the getter.
 
 
 function makeFindQuery(getter) {
-  return function (container, text, options, waitForElementOptions) {
-    return waitForElementWrapper(function () {
+  return function (container, text, options, waitForOptions) {
+    return waitForWrapper(function () {
       return getter(container, text, options);
-    }, waitForElementOptions);
+    }, waitForOptions);
   };
 }
 
@@ -417,6 +459,7 @@ function buildQueries(queryAllBy, getMultipleError, getMissingError) {
 
 var queryHelpers = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  getElementError: getElementError,
   getMultipleElementsFoundError: getMultipleElementsFoundError,
   queryAllByAttribute: queryAllByAttribute,
   queryByAttribute: queryByAttribute,
@@ -521,9 +564,11 @@ function queryAllByLabelText(container, text, _temp2) {
     exact: exact,
     normalizer: matchNormalizer
   });
-  var labelledElements = labels.map(function (label) {
+  var labelledElements = labels.reduce(function (matchedElements, label) {
+    var elementsForLabel = [];
+
     if (label.control) {
-      return label.control;
+      elementsForLabel.push(label.control);
     }
     /* istanbul ignore if */
 
@@ -533,22 +578,26 @@ function queryAllByLabelText(container, text, _temp2) {
       // see https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector#Escaping_special_characters
       // <label for="someId">text</label><input id="someId" />
       // .control support has landed in jsdom (https://github.com/jsdom/jsdom/issues/2175)
-      return container.querySelector("[id=\"" + label.getAttribute('for') + "\"]");
+      elementsForLabel.push(container.querySelector("[id=\"" + label.getAttribute('for') + "\"]"));
     }
 
     if (label.getAttribute('id')) {
       // <label id="someId">text</label><input aria-labelledby="someId" />
-      return container.querySelector("[aria-labelledby~=\"" + label.getAttribute('id') + "\"]");
+      Array.from(container.querySelectorAll("[aria-labelledby~=\"" + label.getAttribute('id') + "\"]")).forEach(function (element) {
+        return elementsForLabel.push(element);
+      });
     }
 
     if (label.childNodes.length) {
       // <label>text: <input /></label>
-      return label.querySelector(selector);
+      Array.from(label.querySelectorAll('button, input, meter, output, progress, select, textarea')).forEach(function (element) {
+        return elementsForLabel.push(element);
+      });
     }
 
-    return null;
-  }).filter(function (label) {
-    return label !== null;
+    return matchedElements.concat(elementsForLabel);
+  }, []).filter(function (element) {
+    return element !== null;
   }).concat(queryAllByAttribute('aria-label', container, text, {
     exact: exact
   }));
@@ -563,7 +612,9 @@ function queryAllByLabelText(container, text, _temp2) {
     var labelledNodes = Array.from(container.querySelectorAll("[aria-labelledby~=\"" + labelId + "\"]"));
     return allLabelledElements.concat(labelledNodes);
   }, []);
-  return Array.from(new Set([].concat(labelledElements, ariaLabelledElements)));
+  return Array.from(new Set([].concat(labelledElements, ariaLabelledElements))).filter(function (element) {
+    return element.matches(selector);
+  });
 } // the getAll* query would normally look like this:
 // const getAllByLabelText = makeGetAllQuery(
 //   queryAllByLabelText,
@@ -731,6 +782,11 @@ var _buildQueries$4 = buildQueries(queryAllByTitle, getMultipleError$5, getMissi
     findAllByTitle = _buildQueries$4[3],
     findByTitle = _buildQueries$4[4];
 
+function _createForOfIteratorHelperLoose(o) { var i = 0; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (o = _unsupportedIterableToArray(o))) return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } i = o[Symbol.iterator](); return i.next.bind(i); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(n); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 var elementRoleList = buildElementRoleList(elementRoles);
 /**
  * @param {Element} element -
@@ -800,21 +856,10 @@ function isInaccessible(element, options) {
 function getImplicitAriaRoles(currentNode) {
   // eslint bug here:
   // eslint-disable-next-line no-unused-vars
-  for (var _iterator = elementRoleList, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-    var _ref;
-
-    if (_isArray) {
-      if (_i >= _iterator.length) break;
-      _ref = _iterator[_i++];
-    } else {
-      _i = _iterator.next();
-      if (_i.done) break;
-      _ref = _i.value;
-    }
-
-    var _ref2 = _ref,
-        selector = _ref2.selector,
-        roles = _ref2.roles;
+  for (var _iterator = _createForOfIteratorHelperLoose(elementRoleList), _step; !(_step = _iterator()).done;) {
+    var _step$value = _step.value,
+        selector = _step$value.selector,
+        roles = _step$value.roles;
 
     if (currentNode.matches(selector)) {
       return [].concat(roles);
@@ -825,15 +870,15 @@ function getImplicitAriaRoles(currentNode) {
 }
 
 function buildElementRoleList(elementRolesMap) {
-  function makeElementSelector(_ref3) {
-    var name = _ref3.name,
-        _ref3$attributes = _ref3.attributes,
-        attributes = _ref3$attributes === void 0 ? [] : _ref3$attributes;
-    return "" + name + attributes.map(function (_ref4) {
-      var attributeName = _ref4.name,
-          value = _ref4.value,
-          _ref4$constraints = _ref4.constraints,
-          constraints = _ref4$constraints === void 0 ? [] : _ref4$constraints;
+  function makeElementSelector(_ref) {
+    var name = _ref.name,
+        _ref$attributes = _ref.attributes,
+        attributes = _ref$attributes === void 0 ? [] : _ref$attributes;
+    return "" + name + attributes.map(function (_ref2) {
+      var attributeName = _ref2.name,
+          value = _ref2.value,
+          _ref2$constraints = _ref2.constraints,
+          constraints = _ref2$constraints === void 0 ? [] : _ref2$constraints;
       var shouldNotExist = constraints.indexOf('undefined') !== -1;
 
       if (shouldNotExist) {
@@ -846,30 +891,19 @@ function buildElementRoleList(elementRolesMap) {
     }).join('');
   }
 
-  function getSelectorSpecificity(_ref5) {
-    var _ref5$attributes = _ref5.attributes,
-        attributes = _ref5$attributes === void 0 ? [] : _ref5$attributes;
+  function getSelectorSpecificity(_ref3) {
+    var _ref3$attributes = _ref3.attributes,
+        attributes = _ref3$attributes === void 0 ? [] : _ref3$attributes;
     return attributes.length;
   }
 
   var result = []; // eslint bug here:
   // eslint-disable-next-line no-unused-vars
 
-  for (var _iterator2 = elementRolesMap.entries(), _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
-    var _ref8;
-
-    if (_isArray2) {
-      if (_i2 >= _iterator2.length) break;
-      _ref8 = _iterator2[_i2++];
-    } else {
-      _i2 = _iterator2.next();
-      if (_i2.done) break;
-      _ref8 = _i2.value;
-    }
-
-    var _ref9 = _ref8,
-        element = _ref9[0],
-        roles = _ref9[1];
+  for (var _iterator2 = _createForOfIteratorHelperLoose(elementRolesMap.entries()), _step2; !(_step2 = _iterator2()).done;) {
+    var _step2$value = _step2.value,
+        element = _step2$value[0],
+        roles = _step2$value[1];
     result = [].concat(result, [{
       selector: makeElementSelector(element),
       roles: Array.from(roles),
@@ -877,17 +911,17 @@ function buildElementRoleList(elementRolesMap) {
     }]);
   }
 
-  return result.sort(function (_ref6, _ref7) {
-    var leftSpecificity = _ref6.specificity;
-    var rightSpecificity = _ref7.specificity;
+  return result.sort(function (_ref4, _ref5) {
+    var leftSpecificity = _ref4.specificity;
+    var rightSpecificity = _ref5.specificity;
     return rightSpecificity - leftSpecificity;
   });
 }
 
 function getRoles(container, _temp) {
-  var _ref10 = _temp === void 0 ? {} : _temp,
-      _ref10$hidden = _ref10.hidden,
-      hidden = _ref10$hidden === void 0 ? false : _ref10$hidden;
+  var _ref6 = _temp === void 0 ? {} : _temp,
+      _ref6$hidden = _ref6.hidden,
+      hidden = _ref6$hidden === void 0 ? false : _ref6$hidden;
 
   function flattenDOM(node) {
     return [node].concat(Array.from(node.children).reduce(function (acc, child) {
@@ -907,14 +941,14 @@ function getRoles(container, _temp) {
   }, {});
 }
 
-function prettyRoles(dom, _ref11) {
-  var hidden = _ref11.hidden;
+function prettyRoles(dom, _ref7) {
+  var hidden = _ref7.hidden;
   var roles = getRoles(dom, {
     hidden: hidden
   });
-  return Object.entries(roles).map(function (_ref12) {
-    var role = _ref12[0],
-        elements = _ref12[1];
+  return Object.entries(roles).map(function (_ref8) {
+    var role = _ref8[0],
+        elements = _ref8[1];
     var delimiterBar = '-'.repeat(50);
     var elementsString = elements.map(function (el) {
       var nameString = "Name \"" + computeAccessibleName(el) + "\":\n";
@@ -926,15 +960,14 @@ function prettyRoles(dom, _ref11) {
 }
 
 var logRoles = function (dom, _temp2) {
-  var _ref13 = _temp2 === void 0 ? {} : _temp2,
-      _ref13$hidden = _ref13.hidden,
-      hidden = _ref13$hidden === void 0 ? false : _ref13$hidden;
+  var _ref9 = _temp2 === void 0 ? {} : _temp2,
+      _ref9$hidden = _ref9.hidden,
+      hidden = _ref9$hidden === void 0 ? false : _ref9$hidden;
 
   return console.log(prettyRoles(dom, {
     hidden: hidden
   }));
 };
-/* eslint no-console:0 */
 
 function queryAllByRole(container, role, _temp) {
   var _ref = _temp === void 0 ? {} : _temp,
@@ -1163,105 +1196,143 @@ function getQueriesForElement(element, queries$1, initialValue) {
   }, initialValue);
 }
 
-function wait(callback, _temp) {
-  if (callback === void 0) {
-    callback = function () {};
-  }
+var hasWarned$1 = false; // deprecated... TODO: remove this method. People should use a find* query or
+// wait instead the reasoning is that this doesn't really do anything useful
+// that you can't get from using find* or wait.
 
-  var _ref = _temp === void 0 ? {} : _temp,
-      _ref$timeout = _ref.timeout,
-      timeout = _ref$timeout === void 0 ? getConfig().asyncUtilTimeout : _ref$timeout,
-      _ref$interval = _ref.interval,
-      interval = _ref$interval === void 0 ? 50 : _ref$interval;
-
-  return waitForExpect(callback, timeout, interval);
+function waitForElement() {
+  return _waitForElement.apply(this, arguments);
 }
 
-function waitWrapper() {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
+function _waitForElement() {
+  _waitForElement = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(callback, options) {
+    return _regeneratorRuntime.wrap(function (_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            if (!hasWarned$1) {
+              hasWarned$1 = true;
+              console.warn("`waitForElement` has been deprecated. Use a `find*` query (preferred: https://testing-library.com/docs/dom-testing-library/api-queries#findby) or use `wait` instead (it's the same API, so you can find/replace): https://testing-library.com/docs/dom-testing-library/api-async#waitfor");
+            }
 
-  return getConfig().asyncWrapper(function () {
-    return wait.apply(void 0, args);
-  });
-}
+            if (callback) {
+              _context.next = 3;
+              break;
+            }
 
-function waitForElementToBeRemoved(callback, _temp) {
-  var _ref = _temp === void 0 ? {} : _temp,
-      _ref$container = _ref.container,
-      container = _ref$container === void 0 ? getDocument() : _ref$container,
-      _ref$timeout = _ref.timeout,
-      timeout = _ref$timeout === void 0 ? getConfig().asyncUtilTimeout : _ref$timeout,
-      _ref$mutationObserver = _ref.mutationObserverOptions,
-      mutationObserverOptions = _ref$mutationObserver === void 0 ? {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    characterData: true
-  } : _ref$mutationObserver;
+            throw new Error('waitForElement requires a callback as the first parameter');
 
-  return new Promise(function (resolve, reject) {
-    if (typeof callback !== 'function') {
-      reject(new Error('waitForElementToBeRemoved requires a function as the first parameter'));
-    }
+          case 3:
+            return _context.abrupt("return", waitForWrapper(function () {
+              var result = callback();
 
-    var timer = setTimeoutFn(function () {
-      onDone(new Error('Timed out in waitForElementToBeRemoved.'), null);
-    }, timeout);
-    var observer = newMutationObserver(function () {
-      try {
-        var _result = callback();
+              if (!result) {
+                throw new Error('Timed out in waitForElement.');
+              }
 
-        if (!_result || Array.isArray(_result) && !_result.length) {
-          onDone(null, true);
-        } // If `callback` returns truthy value, wait for the next mutation or timeout.
+              return result;
+            }, options));
 
-      } catch (error) {
-        onDone(null, true);
+          case 4:
+          case "end":
+            return _context.stop();
+        }
       }
-    }); // Check if the element is not present synchronously,
-    // As the name waitForElementToBeRemoved should check `present` --> `removed`
-
-    try {
-      var result = callback();
-
-      if (!result || Array.isArray(result) && !result.length) {
-        onDone(new Error('The callback function which was passed did not return an element or non-empty array of elements. waitForElementToBeRemoved requires that the element(s) exist before waiting for removal.'));
-      } else {
-        // Only observe for mutations only if there is element while checking synchronously
-        runWithRealTimers(function () {
-          return observer.observe(container, mutationObserverOptions);
-        });
-      }
-    } catch (error) {
-      onDone(error);
-    }
-
-    function onDone(error, result) {
-      clearTimeoutFn(timer);
-      setImmediateFn(function () {
-        return observer.disconnect();
-      });
-
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result);
-      }
-    }
-  });
+    }, _callee);
+  }));
+  return _waitForElement.apply(this, arguments);
 }
+/*
+eslint
+  require-await: "off"
+*/
 
-function waitForElementToBeRemovedWrapper() {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
+var isRemoved = function (result) {
+  return !result || Array.isArray(result) && !result.length;
+}; // Check if the element is not present.
+// As the name implies, waitForElementToBeRemoved should check `present` --> `removed`
+
+
+function initialCheck(elements) {
+  if (isRemoved(elements)) {
+    throw new Error('The element(s) given to waitForElementToBeRemoved are already removed. waitForElementToBeRemoved requires that the element(s) exist(s) before waiting for removal.');
   }
-
-  return getConfig().asyncWrapper(function () {
-    return waitForElementToBeRemoved.apply(void 0, args);
-  });
 }
+
+function waitForElementToBeRemoved() {
+  return _waitForElementToBeRemoved.apply(this, arguments);
+}
+
+function _waitForElementToBeRemoved() {
+  _waitForElementToBeRemoved = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(callback, options) {
+    var timeoutError, elements, getRemainingElements;
+    return _regeneratorRuntime.wrap(function (_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            // created here so we get a nice stacktrace
+            timeoutError = new Error('Timed out in waitForElementToBeRemoved.');
+
+            if (typeof callback !== 'function') {
+              initialCheck(callback);
+              elements = Array.isArray(callback) ? callback : [callback];
+              getRemainingElements = elements.map(function (element) {
+                var parent = element.parentElement;
+
+                while (parent.parentElement) {
+                  parent = parent.parentElement;
+                }
+
+                return function () {
+                  return parent.contains(element) ? element : null;
+                };
+              });
+
+              callback = function () {
+                return getRemainingElements.map(function (c) {
+                  return c();
+                }).filter(Boolean);
+              };
+            }
+
+            initialCheck(callback());
+            return _context.abrupt("return", waitForWrapper(function () {
+              var result;
+
+              try {
+                result = callback();
+              } catch (error) {
+                if (error.name === 'TestingLibraryElementError') {
+                  return true;
+                }
+
+                throw error;
+              }
+
+              if (!isRemoved(result)) {
+                throw timeoutError;
+              }
+
+              return true;
+            }, options));
+
+          case 4:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+  return _waitForElementToBeRemoved.apply(this, arguments);
+}
+/*
+eslint
+  require-await: "off"
+*/
+
+var hasWarned$2 = false; // deprecated... TODO: remove this method. People should use wait instead
+// the reasoning is that waiting for just any DOM change is an implementation
+// detail. People should be waiting for a specific thing to change.
 
 function waitForDomChange(_temp) {
   var _ref = _temp === void 0 ? {} : _temp,
@@ -1277,11 +1348,20 @@ function waitForDomChange(_temp) {
     characterData: true
   } : _ref$mutationObserver;
 
+  if (!hasWarned$2) {
+    hasWarned$2 = true;
+    console.warn("`waitForDomChange` has been deprecated. Use `waitFor` instead: https://testing-library.com/docs/dom-testing-library/api-async#waitfor.");
+  }
+
   return new Promise(function (resolve, reject) {
     var timer = setTimeoutFn(function () {
       onDone(new Error('Timed out in waitForDomChange.'), null);
     }, timeout);
-    var observer = newMutationObserver(function (mutationsList) {
+
+    var _getWindowFromNode = getWindowFromNode(container),
+        MutationObserver = _getWindowFromNode.MutationObserver;
+
+    var observer = new MutationObserver(function (mutationsList) {
       onDone(null, mutationsList);
     });
     runWithRealTimers(function () {
@@ -1319,21 +1399,24 @@ var eventMap = {
     EventType: 'ClipboardEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   cut: {
     EventType: 'ClipboardEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   paste: {
     EventType: 'ClipboardEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   // Composition Events
@@ -1341,21 +1424,24 @@ var eventMap = {
     EventType: 'CompositionEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   compositionStart: {
     EventType: 'CompositionEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   compositionUpdate: {
     EventType: 'CompositionEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   // Keyboard Events
@@ -1364,7 +1450,8 @@ var eventMap = {
     defaultInit: {
       bubbles: true,
       cancelable: true,
-      charCode: 0
+      charCode: 0,
+      composed: true
     }
   },
   keyPress: {
@@ -1372,7 +1459,8 @@ var eventMap = {
     defaultInit: {
       bubbles: true,
       cancelable: true,
-      charCode: 0
+      charCode: 0,
+      composed: true
     }
   },
   keyUp: {
@@ -1380,7 +1468,8 @@ var eventMap = {
     defaultInit: {
       bubbles: true,
       cancelable: true,
-      charCode: 0
+      charCode: 0,
+      composed: true
     }
   },
   // Focus Events
@@ -1388,28 +1477,32 @@ var eventMap = {
     EventType: 'FocusEvent',
     defaultInit: {
       bubbles: false,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   blur: {
     EventType: 'FocusEvent',
     defaultInit: {
       bubbles: false,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   focusIn: {
     EventType: 'FocusEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   focusOut: {
     EventType: 'FocusEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   // Form Events
@@ -1424,7 +1517,8 @@ var eventMap = {
     EventType: 'InputEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   invalid: {
@@ -1454,126 +1548,144 @@ var eventMap = {
     defaultInit: {
       bubbles: true,
       cancelable: true,
-      button: 0
+      button: 0,
+      composed: true
     }
   },
   contextMenu: {
     EventType: 'MouseEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   dblClick: {
     EventType: 'MouseEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   drag: {
     EventType: 'DragEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   dragEnd: {
     EventType: 'DragEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   dragEnter: {
     EventType: 'DragEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   dragExit: {
     EventType: 'DragEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   dragLeave: {
     EventType: 'DragEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   dragOver: {
     EventType: 'DragEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   dragStart: {
     EventType: 'DragEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   drop: {
     EventType: 'DragEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   mouseDown: {
     EventType: 'MouseEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   mouseEnter: {
     EventType: 'MouseEvent',
     defaultInit: {
       bubbles: false,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   mouseLeave: {
     EventType: 'MouseEvent',
     defaultInit: {
       bubbles: false,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   mouseMove: {
     EventType: 'MouseEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   mouseOut: {
     EventType: 'MouseEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   mouseOver: {
     EventType: 'MouseEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   mouseUp: {
     EventType: 'MouseEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   // Selection Events
@@ -1589,28 +1701,32 @@ var eventMap = {
     EventType: 'TouchEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   touchEnd: {
     EventType: 'TouchEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   touchMove: {
     EventType: 'TouchEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   touchStart: {
     EventType: 'TouchEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   // UI Events
@@ -1626,7 +1742,8 @@ var eventMap = {
     EventType: 'WheelEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   // Media Events
@@ -1834,7 +1951,8 @@ var eventMap = {
     EventType: 'PointerEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   pointerEnter: {
@@ -1848,35 +1966,40 @@ var eventMap = {
     EventType: 'PointerEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   pointerMove: {
     EventType: 'PointerEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   pointerUp: {
     EventType: 'PointerEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   pointerCancel: {
     EventType: 'PointerEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   pointerOut: {
     EventType: 'PointerEvent',
     defaultInit: {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      composed: true
     }
   },
   pointerLeave: {
@@ -1890,14 +2013,16 @@ var eventMap = {
     EventType: 'PointerEvent',
     defaultInit: {
       bubbles: false,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   lostPointerCapture: {
     EventType: 'PointerEvent',
     defaultInit: {
       bubbles: false,
-      cancelable: false
+      cancelable: false,
+      composed: true
     }
   },
   // history events
@@ -1989,26 +2114,8 @@ Object.keys(eventMap).forEach(function (key) {
   fireEvent[key] = function (node, init) {
     return fireEvent(node, createEvent[key](node, init));
   };
-});
-
-function getWindowFromNode(node) {
-  // istanbul ignore next I'm not sure what could cause the final else so we'll leave it uncovered.
-  if (node.defaultView) {
-    // node is document
-    return node.defaultView;
-  } else if (node.ownerDocument && node.ownerDocument.defaultView) {
-    // node is a DOM node
-    return node.ownerDocument.defaultView;
-  } else if (node.window) {
-    // node is window
-    return node.window;
-  } else {
-    // no idea...
-    throw new Error("Unable to find the \"window\" object for the given node. fireEvent currently supports firing events on DOM nodes, document, and window. Please file an issue with the code that's causing you to see this error: https://github.com/testing-library/dom-testing-library/issues/new");
-  }
-} // function written after some investigation here:
+}); // function written after some investigation here:
 // https://github.com/facebook/react/issues/10135#issuecomment-401496776
-
 
 function setNativeValue(element, value) {
   var _ref = Object.getOwnPropertyDescriptor(element, 'value') || {},
@@ -2057,4 +2164,4 @@ var screen = typeof document !== 'undefined' && document.body ? getQueriesForEle
   debug: debug
 });
 
-export { getQueriesForElement as bindElementToQueries, buildQueries, configure, createEvent, findAllByAltText, findAllByDisplayValue, findAllByLabelText, findAllByPlaceholderText, findAllByRole, findAllByTestId, findAllByText, findAllByTitle, findByAltText, findByDisplayValue, findByLabelText, findByPlaceholderText, findByRole, findByTestId, findByText, findByTitle, fireEvent, getAllByAltText, getAllByDisplayValue, getAllByLabelText, getAllByPlaceholderText, getAllByRole, getAllByTestId, getAllByText, getAllByTitle, getByAltText, getByDisplayValue, getByLabelText, getByPlaceholderText, getByRole, getByTestId, getByText, getByTitle, getDefaultNormalizer, getMultipleElementsFoundError, getNodeText, getQueriesForElement, getRoles, isInaccessible, logDOM, logRoles, makeFindQuery, makeGetAllQuery, makeSingleQuery, prettyDOM, queries, queryAllByAltText, queryAllByAttribute, queryAllByDisplayValue, queryAllByLabelText, queryAllByPlaceholderText, queryAllByRole, queryAllByTestId, queryAllByText, queryAllByTitle, queryByAltText, queryByAttribute, queryByDisplayValue, queryByLabelText, queryByPlaceholderText, queryByRole, queryByTestId, queryByText, queryByTitle, queryHelpers, screen, waitWrapper as wait, waitForDomChangeWrapper as waitForDomChange, waitForElementWrapper as waitForElement, waitForElementToBeRemovedWrapper as waitForElementToBeRemoved, getQueriesForElement as within };
+export { buildQueries, configure, createEvent, findAllByAltText, findAllByDisplayValue, findAllByLabelText, findAllByPlaceholderText, findAllByRole, findAllByTestId, findAllByText, findAllByTitle, findByAltText, findByDisplayValue, findByLabelText, findByPlaceholderText, findByRole, findByTestId, findByText, findByTitle, fireEvent, getAllByAltText, getAllByDisplayValue, getAllByLabelText, getAllByPlaceholderText, getAllByRole, getAllByTestId, getAllByText, getAllByTitle, getByAltText, getByDisplayValue, getByLabelText, getByPlaceholderText, getByRole, getByTestId, getByText, getByTitle, getDefaultNormalizer, getElementError, getMultipleElementsFoundError, getNodeText, getQueriesForElement, getRoles, isInaccessible, logDOM, logRoles, makeFindQuery, makeGetAllQuery, makeSingleQuery, prettyDOM, queries, queryAllByAltText, queryAllByAttribute, queryAllByDisplayValue, queryAllByLabelText, queryAllByPlaceholderText, queryAllByRole, queryAllByTestId, queryAllByText, queryAllByTitle, queryByAltText, queryByAttribute, queryByDisplayValue, queryByLabelText, queryByPlaceholderText, queryByRole, queryByTestId, queryByText, queryByTitle, queryHelpers, screen, wait, waitForWrapper as waitFor, waitForDomChangeWrapper as waitForDomChange, waitForElement, waitForElementToBeRemoved, getQueriesForElement as within };

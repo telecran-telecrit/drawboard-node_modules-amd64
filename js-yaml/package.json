@@ -24,7 +24,6 @@
   "_requiredBy": [
     "/cosmiconfig",
     "/eslint",
-    "/rewire/eslint",
     "/svgo"
   ],
   "_resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-3.13.1.tgz",

@@ -30,8 +30,6 @@
     "/istanbul-lib-source-maps",
     "/move-concurrently",
     "/node-gyp",
-    "/rewire/flat-cache",
-    "/tmp-promise/tmp",
     "/webpack/cacache"
   ],
   "_resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.6.3.tgz",

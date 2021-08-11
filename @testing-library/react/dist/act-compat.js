@@ -25,7 +25,7 @@ const actSupported = reactAct !== undefined; // act is supported react-dom@16.8.
 function actPolyfill(cb) {
   _reactDom.default.unstable_batchedUpdates(cb);
 
-  _reactDom.default.render(_react.default.createElement("div", null), document.createElement('div'));
+  _reactDom.default.render( /*#__PURE__*/_react.default.createElement("div", null), document.createElement('div'));
 }
 
 const act = reactAct || actPolyfill;

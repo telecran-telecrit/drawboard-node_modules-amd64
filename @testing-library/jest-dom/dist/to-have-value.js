@@ -22,12 +22,20 @@ function toHaveValue(htmlElement, expectedValue) {
 
   const receivedValue = (0, _utils.getSingleElementValue)(htmlElement);
   const expectsValue = expectedValue !== undefined;
+  let expectedTypedValue = expectedValue;
+  let receivedTypedValue = receivedValue;
+
+  if (expectedValue == receivedValue && expectedValue !== receivedValue) {
+    expectedTypedValue = `${expectedValue} (${typeof expectedValue})`;
+    receivedTypedValue = `${receivedValue} (${typeof receivedValue})`;
+  }
+
   return {
     pass: expectsValue ? (0, _isEqualWith.default)(receivedValue, expectedValue, _utils.compareArraysAsSet) : Boolean(receivedValue),
     message: () => {
       const to = this.isNot ? 'not to' : 'to';
       const matcher = (0, _jestMatcherUtils.matcherHint)(`${this.isNot ? '.not' : ''}.toHaveValue`, 'element', expectedValue);
-      return (0, _utils.getMessage)(matcher, `Expected the element ${to} have value`, expectsValue ? expectedValue : '(any)', 'Received', receivedValue);
+      return (0, _utils.getMessage)(matcher, `Expected the element ${to} have value`, expectsValue ? expectedTypedValue : '(any)', 'Received', receivedTypedValue);
     }
   };
 }

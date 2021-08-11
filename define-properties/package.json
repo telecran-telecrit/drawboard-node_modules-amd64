@@ -31,6 +31,7 @@
     "/object.getownpropertydescriptors",
     "/object.values",
     "/regexp.prototype.flags",
+    "/string.prototype.matchall",
     "/string.prototype.trimleft",
     "/string.prototype.trimright",
     "/util.promisify"

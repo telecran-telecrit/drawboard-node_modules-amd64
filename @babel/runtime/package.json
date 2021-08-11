@@ -23,7 +23,6 @@
     "fetchSpec": "7.8.3"
   },
   "_requiredBy": [
-    "/@testing-library/jest-dom",
     "/babel-plugin-macros",
     "/eslint-plugin-jsx-a11y",
     "/i18next-browser-languagedetector",

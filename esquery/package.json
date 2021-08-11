@@ -22,8 +22,7 @@
     "fetchSpec": "1.0.1"
   },
   "_requiredBy": [
-    "/eslint",
-    "/rewire/eslint"
+    "/eslint"
   ],
   "_resolved": "https://registry.npmjs.org/esquery/-/esquery-1.0.1.tgz",
   "_spec": "1.0.1",

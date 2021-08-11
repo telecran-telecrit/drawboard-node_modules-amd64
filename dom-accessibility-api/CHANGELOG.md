@@ -1,3 +1,35 @@
+# dom-accessibility-api changelog
+
+## 0.4.3
+
+### Patch Changes
+
+- [`b421d9e`](https://github.com/eps1lon/dom-accessibility-api/commit/b421d9e9709adf0f72e09cb5d7ea2a32ceefd8eb) [#168](https://github.com/eps1lon/dom-accessibility-api/pull/168) Thanks [@eps1lon](https://github.com/eps1lon)! - fix: Use relative paths in exports field
+
+  Fixes a crash when using ES modules in Node.
+
+## 0.4.2
+
+### Minor Changes
+
+- [`0897630`](https://github.com/eps1lon/dom-accessibility-api/commit/0897630862d608a9ca22e9799bb30b37e1032afa) [#155](https://github.com/eps1lon/dom-accessibility-api/pull/155) - Publish version using ES6 modules allongside current CommonJS modules
+
+## 0.4.1
+
+### Patch Changes
+
+- [`63c119f`](https://github.com/eps1lon/dom-accessibility-api/commit/63c119f388d4e0f121320d75c4ec6fe334d8f370) [#147](https://github.com/eps1lon/dom-accessibility-api/pull/147) Thanks [@eps1lon](https://github.com/eps1lon)! - Deploy all 0.4.0 changes
+
+## 0.4.0
+
+### Minor Changes
+
+- [`e80a1fb`](https://github.com/eps1lon/dom-accessibility-api/commit/e80a1fb32c136539a46007a64ef8c998855080a1) [#141](https://github.com/eps1lon/dom-accessibility-api/pull/141) Thanks [@eps1lon](https://github.com/eps1lon)! - Support ES5 environments
+
+### Patch Changes
+
+- [`bd41c2d`](https://github.com/eps1lon/dom-accessibility-api/commit/bd41c2d3dec9c27e178b65bbe226d3c7adef0678) [#143](https://github.com/eps1lon/dom-accessibility-api/pull/143) Thanks [@eps1lon](https://github.com/eps1lon)! - fix: support `<label for>` for `<select>` and `<textarea>`
+
 ## 0.3.0
 
 ### Minor Changes

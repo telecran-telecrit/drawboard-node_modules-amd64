@@ -22,8 +22,7 @@
     "fetchSpec": "0.0.33"
   },
   "_requiredBy": [
-    "/external-editor",
-    "/rewire/external-editor"
+    "/external-editor"
   ],
   "_resolved": "https://registry.npmjs.org/tmp/-/tmp-0.0.33.tgz",
   "_spec": "0.0.33",

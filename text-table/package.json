@@ -23,8 +23,7 @@
   },
   "_requiredBy": [
     "/eslint",
-    "/react-dev-utils",
-    "/rewire/eslint"
+    "/react-dev-utils"
   ],
   "_resolved": "https://registry.npmjs.org/text-table/-/text-table-0.2.0.tgz",
   "_spec": "0.2.0",

@@ -8,8 +8,6 @@ Object.defineProperty(exports, "__esModule", {
 exports.prettyDOM = prettyDOM;
 exports.logDOM = void 0;
 
-var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
-
 var _prettyFormat = _interopRequireDefault(require("pretty-format"));
 
 var _helpers = require("./helpers");
@@ -58,16 +56,15 @@ function prettyDOM(dom, maxLength, options) {
     throw new TypeError(`Expected an element or document but got ${domTypeName}`);
   }
 
-  const debugContent = (0, _prettyFormat.default)(dom, (0, _extends2.default)({
+  const debugContent = (0, _prettyFormat.default)(dom, {
     plugins: [DOMElement, DOMCollection],
     printFunctionName: false,
-    highlight: inNode()
-  }, options));
+    highlight: inNode(),
+    ...options
+  });
   return maxLength !== undefined && dom.outerHTML.length > maxLength ? `${debugContent.slice(0, maxLength)}...` : debugContent;
 }
 
 const logDOM = (...args) => console.log(prettyDOM(...args));
-/* eslint no-console:0 */
-
 
 exports.logDOM = logDOM;

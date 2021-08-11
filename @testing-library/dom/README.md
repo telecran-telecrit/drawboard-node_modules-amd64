@@ -235,6 +235,14 @@ Thanks goes to these people ([emoji key][emojis]):
     <td align="center"><a href="https://www.linkedin.com/in/seetdev/"><img src="https://avatars2.githubusercontent.com/u/35116035?v=4" width="100px;" alt=""/><br /><sub><b>seetdev</b></sub></a><br /><a href="https://github.com/testing-library/dom-testing-library/commits?author=seetdev" title="Tests">⚠️</a> <a href="https://github.com/testing-library/dom-testing-library/commits?author=seetdev" title="Code">💻</a></td>
     <td align="center"><a href="https://twitter.com/xgbuils"><img src="https://avatars2.githubusercontent.com/u/6483614?v=4" width="100px;" alt=""/><br /><sub><b>Xavier Garcia Buils</b></sub></a><br /><a href="https://github.com/testing-library/dom-testing-library/commits?author=xgbuils" title="Code">💻</a> <a href="https://github.com/testing-library/dom-testing-library/commits?author=xgbuils" title="Tests">⚠️</a></td>
     <td align="center"><a href="https://github.com/aw-davidson"><img src="https://avatars2.githubusercontent.com/u/32170938?v=4" width="100px;" alt=""/><br /><sub><b>aw-davidson</b></sub></a><br /><a href="https://github.com/testing-library/dom-testing-library/commits?author=aw-davidson" title="Code">💻</a> <a href="https://github.com/testing-library/dom-testing-library/commits?author=aw-davidson" title="Tests">⚠️</a></td>
+    <td align="center"><a href="https://michaeldeboey.be"><img src="https://avatars3.githubusercontent.com/u/6643991?v=4" width="100px;" alt=""/><br /><sub><b>Michaël De Boey</b></sub></a><br /><a href="https://github.com/testing-library/dom-testing-library/commits?author=MichaelDeBoey" title="Code">💻</a></td>
+    <td align="center"><a href="https://twitter.com/minh_ngvyen"><img src="https://avatars3.githubusercontent.com/u/2852660?v=4" width="100px;" alt=""/><br /><sub><b>Minh Nguyen</b></sub></a><br /><a href="https://github.com/testing-library/dom-testing-library/commits?author=NMinhNguyen" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/egilsster"><img src="https://avatars0.githubusercontent.com/u/5672257?v=4" width="100px;" alt=""/><br /><sub><b>Egill Sveinbjörnsson</b></sub></a><br /><a href="https://github.com/testing-library/dom-testing-library/commits?author=egilsster" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="http://pustovalov.dev"><img src="https://avatars2.githubusercontent.com/u/1568885?v=4" width="100px;" alt=""/><br /><sub><b>Pavel Pustovalov</b></sub></a><br /><a href="https://github.com/testing-library/dom-testing-library/commits?author=pustovalov" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/apalaniuk"><img src="https://avatars1.githubusercontent.com/u/17710124?v=4" width="100px;" alt=""/><br /><sub><b>Adam Palaniuk</b></sub></a><br /><a href="https://github.com/testing-library/dom-testing-library/commits?author=apalaniuk" title="Code">💻</a> <a href="https://github.com/testing-library/dom-testing-library/commits?author=apalaniuk" title="Tests">⚠️</a></td>
+    <td align="center"><a href="https://github.com/Yama-Tomo"><img src="https://avatars0.githubusercontent.com/u/4970917?v=4" width="100px;" alt=""/><br /><sub><b>Yama-Tomo</b></sub></a><br /><a href="https://github.com/testing-library/dom-testing-library/commits?author=Yama-Tomo" title="Code">💻</a> <a href="https://github.com/testing-library/dom-testing-library/commits?author=Yama-Tomo" title="Tests">⚠️</a></td>
   </tr>
 </table>
 
@@ -258,7 +266,7 @@ Contributions of any kind welcome!
   https://img.shields.io/codecov/c/github/testing-library/dom-testing-library.svg?style=flat-square
 [coverage]: https://codecov.io/github/testing-library/dom-testing-library
 [version-badge]:
-  https://img.shields.io/npm/v/dom-testing-library.svg?style=flat-square
+  https://img.shields.io/npm/v/@testing-library/dom.svg?style=flat-square
 [package]: https://www.npmjs.com/package/@testing-library/dom
 [downloads-badge]:
   https://img.shields.io/npm/dm/@testing-library/dom.svg?style=flat-square

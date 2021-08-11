@@ -29,8 +29,7 @@
     "fetchSpec": "1.6.2"
   },
   "_requiredBy": [
-    "/mississippi",
-    "/rewire/eslint"
+    "/mississippi"
   ],
   "_resolved": "https://registry.npmjs.org/concat-stream/-/concat-stream-1.6.2.tgz",
   "_spec": "1.6.2",

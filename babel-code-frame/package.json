@@ -25,8 +25,7 @@
     "fetchSpec": "6.26.0"
   },
   "_requiredBy": [
-    "/fork-ts-checker-webpack-plugin",
-    "/rewire/eslint"
+    "/fork-ts-checker-webpack-plugin"
   ],
   "_resolved": "https://registry.npmjs.org/babel-code-frame/-/babel-code-frame-6.26.0.tgz",
   "_spec": "6.26.0",

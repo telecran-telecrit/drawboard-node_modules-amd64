@@ -25,7 +25,6 @@
     "/body-parser",
     "/external-editor",
     "/raw-body",
-    "/rewire/external-editor",
     "/whatwg-encoding"
   ],
   "_resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.24.tgz",
